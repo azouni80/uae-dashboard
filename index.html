@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAE Crisis Dashboard | Team Edition</title>
+<meta http-equiv="refresh" content="900"> <!-- Auto-refresh every 15 minutes -->
+<style>
+:root {
+  --primary:#1a2744; --accent:#c0392b; --warning:#e67e22; --caution:#f1c40f;
+  --safe:#27ae60; --bg:#0f1923; --card:#1a2744; --card2:#1e2d45;
+  --text:#ecf0f1; --muted:#7f8c8d; --border:#2c3e50; --glow:rgba(52,152,219,0.3);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;overflow-x:hidden;}
+a{color:#3498db;text-decoration:none;} a:hover{text-decoration:underline;}
+
+/* LAYOUT */
+.dashboard{display:grid;grid-template-columns:280px 1fr;min-height:100vh;}
+@media(max-width:900px){.dashboard{grid-template-columns:1fr;} .sidebar{display:none;}}
+
+/* SIDEBAR NAV */
+.sidebar{background:#0d1520;border-right:1px solid var(--border);padding:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+.sidebar-header{padding:20px;text-align:center;border-bottom:1px solid var(--border);}
+.sidebar-header h2{font-size:1em;color:#fff;margin-bottom:4px;}
+.sidebar-header .live-dot{display:inline-block;width:8px;height:8px;background:var(--safe);border-radius:50%;animation:pulse 2s infinite;margin-right:6px;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.sidebar-header .clock{font-size:1.6em;font-weight:700;color:#3498db;font-variant-numeric:tabular-nums;}
+.sidebar-header .date-line{font-size:0.82em;color:var(--muted);}
+.nav-section{padding:12px 16px 6px;font-size:0.7em;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);font-weight:600;}
+.nav-link{display:block;padding:10px 20px;color:var(--text);font-size:0.88em;border-left:3px solid transparent;transition:all 0.2s;}
+.nav-link:hover,.nav-link.active{background:rgba(52,152,219,0.1);border-left-color:#3498db;color:#fff;text-decoration:none;}
+.nav-link .nav-icon{margin-right:8px;width:18px;display:inline-block;text-align:center;}
+.nav-divider{border-top:1px solid var(--border);margin:8px 16px;}
+
+/* MAIN CONTENT */
+.main{padding:0;overflow-y:auto;}
+.topbar{position:sticky;top:0;z-index:100;padding:0;}
+
+/* BREAKING NEWS TICKER */
+.news-ticker{display:flex;align-items:stretch;background:#1a0a0a;border-bottom:2px solid #c0392b;overflow:hidden;height:38px;}
+.ticker-label{background:#c0392b;color:#fff;font-weight:800;font-size:0.82em;letter-spacing:1px;padding:0 16px;display:flex;align-items:center;gap:6px;white-space:nowrap;flex-shrink:0;z-index:2;text-transform:uppercase;animation:labelPulse 2s infinite;}
+@keyframes labelPulse{0%,100%{background:#c0392b;}50%{background:#e74c3c;}}
+.ticker-track{flex:1;overflow:hidden;display:flex;align-items:center;position:relative;}
+.ticker-content{display:inline-block;white-space:nowrap;padding-left:100%;animation:tickerScroll 60s linear infinite;font-size:0.88em;color:#f0d0d0;font-weight:500;}
+.ticker-content .hl{margin:0 28px;display:inline;}
+.ticker-content .dot{color:#c0392b;margin:0 6px;font-weight:900;}
+@keyframes tickerScroll{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+.news-ticker:hover .ticker-content{animation-play-state:paused;}
+
+/* LIVE UPDATE INDICATOR */
+.live-update-bar{background:rgba(39,174,96,0.1);border-bottom:1px solid var(--border);padding:4px 24px;font-size:0.72em;color:var(--muted);display:flex;justify-content:space-between;align-items:center;}
+.live-update-bar .live-pulse{display:inline-block;width:6px;height:6px;background:var(--safe);border-radius:50%;animation:pulse 2s infinite;margin-right:5px;}
+
+/* LIVE NEWS + VIDEO LAYOUT */
+.live-split{display:grid;grid-template-columns:1fr 380px;gap:16px;margin-bottom:16px;}
+@media(max-width:1100px){.live-split{grid-template-columns:1fr;}}
+.live-video-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;}
+.live-video-header{padding:10px 14px;background:rgba(192,57,43,0.15);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;font-size:0.82em;font-weight:600;color:#e74c3c;}
+.live-video-header .vdot{width:8px;height:8px;background:#e74c3c;border-radius:50%;animation:pulse 1.5s infinite;}
+.live-video-wrap{position:relative;width:100%;padding-bottom:56.25%;background:#000;}
+.live-video-wrap iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:none;}
+.live-video-footer{padding:8px 14px;font-size:0.72em;color:var(--muted);text-align:center;}
+.live-video-footer a{color:var(--muted);} .live-video-footer a:hover{color:#e74c3c;}
+
+/* ALERT BANNER */
+.alert-bar{padding:12px 24px;font-weight:600;text-align:center;font-size:1em;color:#fff;cursor:pointer;transition:background 0.3s;}
+.alert-bar.green{background:var(--safe);}
+.alert-bar.amber{background:var(--warning);}
+.alert-bar.red{background:var(--accent);animation:alertFlash 1.5s infinite;}
+@keyframes alertFlash{0%,100%{opacity:1;}50%{opacity:0.7;}}
+
+/* COUNTDOWNS */
+.countdown-strip{display:flex;gap:0;background:var(--card);border-bottom:1px solid var(--border);}
+.cd-item{flex:1;padding:14px 12px;text-align:center;border-right:1px solid var(--border);}
+.cd-item:last-child{border-right:none;}
+.cd-item .cd-label{font-size:0.7em;text-transform:uppercase;letter-spacing:1px;color:var(--muted);}
+.cd-item .cd-value{font-size:1.3em;font-weight:700;color:#3498db;font-variant-numeric:tabular-nums;margin-top:2px;}
+.cd-item .cd-value.urgent{color:var(--accent);}
+.cd-item .cd-value.warning{color:var(--warning);}
+
+/* CONTENT AREA */
+.content{padding:20px 24px;max-width:1100px;}
+.section-title{font-size:1.15em;font-weight:700;color:#fff;margin:24px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.section-title:first-child{margin-top:0;}
+.section-anchor{scroll-margin-top:100px;}
+
+/* CARDS */
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px;margin-bottom:14px;}
+.card.highlight{border-color:var(--warning);box-shadow:0 0 20px rgba(230,126,34,0.15);}
+.card.danger{border-color:var(--accent);box-shadow:0 0 20px rgba(192,57,43,0.15);}
+.card.success{border-color:var(--safe);}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:14px;}
+.kpi-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;}
+.kpi-card .kv{font-size:1.6em;font-weight:700;color:#3498db;}
+.kpi-card .kv.bad{color:var(--accent);} .kpi-card .kv.warn{color:var(--warning);} .kpi-card .kv.good{color:var(--safe);}
+.kpi-card .kl{font-size:0.72em;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-top:4px;}
+.kpi-card .kc{font-size:0.8em;margin-top:2px;}
+.kc.up{color:var(--safe);} .kc.down{color:var(--accent);}
+
+/* TRAFFIC LIGHT */
+.traffic-light-bar{display:flex;border-radius:8px;overflow:hidden;margin:12px 0;}
+.tl-seg{flex:1;padding:14px;text-align:center;color:#fff;font-weight:700;font-size:0.9em;opacity:0.25;cursor:pointer;transition:all 0.3s;}
+.tl-seg.active{opacity:1;box-shadow:inset 0 0 0 3px rgba(255,255,255,0.5);}
+.tl-seg:hover{opacity:0.7;}
+.tl-green{background:var(--safe);} .tl-amber{background:var(--warning);} .tl-red{background:var(--accent);}
+
+/* TRIGGER TABLE */
+.trigger-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.trigger-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;}
+.trigger-dot.g{background:var(--safe);} .trigger-dot.a{background:var(--warning);} .trigger-dot.r{background:var(--accent);}
+.trigger-name{flex:1;font-weight:600;font-size:0.9em;}
+.trigger-status{flex:2;font-size:0.85em;color:var(--muted);}
+
+/* ROUTE CARDS */
+.route-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media(max-width:700px){.route-grid{grid-template-columns:1fr;}}
+.route-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;border-left:4px solid;}
+.route-card.available{border-left-color:var(--safe);}
+.route-card.limited{border-left-color:var(--warning);}
+.route-card.closed{border-left-color:var(--accent);}
+.route-card.primary{border-left-color:#3498db;border-width:1px 1px 1px 6px;box-shadow:0 0 15px rgba(52,152,219,0.15);}
+.route-card h4{font-size:0.95em;margin-bottom:4px;}
+.route-card p{font-size:0.82em;color:var(--muted);margin:0;}
+.route-badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.7em;font-weight:700;text-transform:uppercase;}
+.route-badge.go{background:rgba(39,174,96,0.2);color:var(--safe);}
+.route-badge.caution{background:rgba(230,126,34,0.2);color:var(--warning);}
+.route-badge.no{background:rgba(192,57,43,0.2);color:var(--accent);}
+
+/* CHECKLIST */
+.checklist-item{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);}
+.checklist-item input[type=checkbox]{margin-top:4px;width:18px;height:18px;accent-color:var(--safe);cursor:pointer;}
+.checklist-item label{cursor:pointer;font-size:0.9em;}
+.checklist-item.done label{text-decoration:line-through;color:var(--muted);}
+.checklist-progress{height:6px;background:var(--border);border-radius:3px;margin:10px 0;overflow:hidden;}
+.checklist-progress .bar{height:100%;background:var(--safe);border-radius:3px;transition:width 0.5s ease;}
+
+/* QUICK LINKS */
+.quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;}
+.quick-link{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:12px;transition:all 0.2s;cursor:pointer;text-decoration:none;color:var(--text);}
+.quick-link:hover{border-color:#3498db;box-shadow:0 0 12px var(--glow);transform:translateY(-1px);text-decoration:none;}
+.quick-link .ql-icon{font-size:1.5em;width:36px;text-align:center;}
+.quick-link .ql-text{font-size:0.82em;}
+.quick-link .ql-title{font-weight:600;color:#fff;font-size:0.9em;}
+
+/* TABLES */
+.data-table{width:100%;border-collapse:collapse;}
+.data-table th,.data-table td{padding:8px 10px;text-align:left;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85em;}
+.data-table th{color:var(--muted);font-weight:600;text-transform:uppercase;font-size:0.72em;letter-spacing:0.5px;}
+.tag{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.72em;font-weight:600;}
+.tag.red{background:rgba(192,57,43,0.2);color:var(--accent);}
+.tag.orange{background:rgba(230,126,34,0.2);color:var(--warning);}
+.tag.yellow{background:rgba(241,196,15,0.2);color:var(--caution);}
+.tag.green{background:rgba(39,174,96,0.2);color:var(--safe);}
+.tag.blue{background:rgba(52,152,219,0.2);color:#3498db;}
+
+/* MISSILE TRACKER */
+.missile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px;}
+.missile-card{background:var(--card2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center;}
+.missile-card .mv{font-size:1.5em;font-weight:700;}
+.missile-card .ml{font-size:0.7em;text-transform:uppercase;color:var(--muted);letter-spacing:0.5px;margin-top:2px;}
+.missile-card.total{border-color:var(--safe);} .missile-card.total .mv{color:var(--safe);}
+.missile-card.cas{border-color:var(--accent);} .missile-card.cas .mv{color:var(--accent);}
+
+/* SCROLLABLE LOG */
+.scroll-log{max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;}
+.scroll-log::-webkit-scrollbar{width:6px;} .scroll-log::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px;}
+
+/* FOOTER */
+.dash-footer{padding:20px 24px;text-align:center;font-size:0.78em;color:var(--muted);border-top:1px solid var(--border);}
+
+/* BOND TRACKER */
+.bond-rec{display:flex;border-radius:8px;overflow:hidden;margin:14px 0;}
+.bond-rec-seg{flex:1;padding:14px 8px;text-align:center;font-weight:700;font-size:0.88em;line-height:1.3;opacity:0.2;transition:all 0.4s;color:#fff;}
+.bond-rec-seg.active{opacity:1;box-shadow:inset 0 0 0 3px rgba(255,255,255,0.45);}
+.bond-rec-green{background:var(--safe);} .bond-rec-amber{background:var(--warning);} .bond-rec-red{background:var(--accent);}
+.bond-context-bar{background:rgba(52,152,219,0.08);border:1px solid rgba(52,152,219,0.2);border-radius:8px;padding:10px 16px;margin-bottom:14px;font-size:0.82em;color:var(--muted);display:flex;gap:20px;flex-wrap:wrap;}
+.bond-context-bar strong{color:var(--text);}
+.bond-rec-text{margin-top:10px;padding:10px 14px;border-radius:6px;background:rgba(255,255,255,0.05);font-size:0.88em;font-weight:500;}
+.bond-yield-input{display:flex;align-items:center;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:0.82em;}
+.bond-yield-input label{color:var(--muted);}
+.bond-yield-input input{background:var(--card2);border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 8px;width:80px;font-size:0.9em;}
+.bond-yield-input button{background:#3498db;color:#fff;border:none;border-radius:4px;padding:5px 12px;cursor:pointer;font-size:0.82em;}
+.bond-yield-input button:hover{background:#2980b9;}
+
+/* PRINT */
+@media print{
+  .dashboard{display:block;} .sidebar{display:none;}
+  .main{background:#fff;color:#222;} .card,.kpi-card,.missile-card,.route-card,.quick-link{background:#f8f9fa;color:#222;border-color:#ddd;}
+  .alert-bar,.tl-seg,.missile-card.total,.missile-card.cas{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .section-title{color:#1a2744;}
+}
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+  <!-- ===== SIDEBAR ===== -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h2><span class="live-dot"></span> UAE CRISIS MONITOR</h2>
+      <div class="clock" id="clock">--:--:--</div>
+      <div class="date-line" id="dateLine">Loading...</div>
+      <div style="font-size:0.75em;color:var(--muted);margin-top:4px;">Dubai Time (GST/UTC+4)</div>
+      <div style="margin-top:8px;font-size:0.78em;color:var(--muted);">Day <strong style="color:#3498db;font-size:1.2em;" id="dayCount">41</strong> of Conflict</div>
+    </div>
+
+    <div class="nav-section">Navigation</div>
+    <a class="nav-link active" href="#evac"><span class="nav-icon">&#9888;</span> Evacuation Alert</a>
+    <a class="nav-link" href="#livenews"><span class="nav-icon">&#9889;</span> Live Updates + TV</a>
+    <a class="nav-link" href="#routes"><span class="nav-icon">&#9992;</span> Exit Routes</a>
+    <a class="nav-link" href="#checklist"><span class="nav-icon">&#9745;</span> Evacuation Checklist</a>
+    <a class="nav-link" href="#flights"><span class="nav-icon">&#128747;</span> Flight Status</a>
+    <a class="nav-link" href="#markets"><span class="nav-icon">&#128200;</span> Market Data</a>
+    <a class="nav-link" href="#bonds"><span class="nav-icon">&#127981;</span> Bond Tracker</a>
+    <a class="nav-link" href="#missiles"><span class="nav-icon">&#127919;</span> Missile Tracker</a>
+    <a class="nav-link" href="#fmcg"><span class="nav-icon">&#128722;</span> FMCG Impact</a>
+    <a class="nav-link" href="#risks"><span class="nav-icon">&#128680;</span> Risk Assessment</a>
+    <a class="nav-link" href="#ceasefire"><span class="nav-icon">&#9878;</span> Ceasefire Status</a>
+    <a class="nav-link" href="#timeline"><span class="nav-icon">&#128197;</span> Timeline</a>
+    <a class="nav-link" href="#actions"><span class="nav-icon">&#9989;</span> Actions</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section">Quick Links</div>
+    <a class="nav-link" href="https://www.emirates.com/ae/english/manage-booking/flight-status/" target="_blank"><span class="nav-icon">&#128269;</span> Emirates Flight Status</a>
+    <a class="nav-link" href="https://www.emirates.com/ae/english/book/" target="_blank"><span class="nav-icon">&#127903;</span> Book Emirates</a>
+    <a class="nav-link" href="https://hormuzstraitmonitor.com/" target="_blank"><span class="nav-icon">&#128674;</span> Hormuz Tracker</a>
+    <a class="nav-link" href="https://www.aljazeera.com/tag/iran-war/" target="_blank"><span class="nav-icon">&#128240;</span> Al Jazeera Live</a>
+
+    <div class="nav-divider"></div>
+    <div class="nav-section">Emergency</div>
+    <a class="nav-link" href="tel:999" style="color:var(--accent);"><span class="nav-icon">&#128222;</span> UAE Emergency (999)</a>
+    <a class="nav-link" href="tel:+971600555555"><span class="nav-icon">&#128222;</span> Emirates Rebooking</a>
+    <a class="nav-link" href="tel:+97142942222"><span class="nav-icon">&#128222;</span> Etihad Rebooking</a>
+  </div>
+
+  <!-- ===== MAIN PANEL ===== -->
+  <div class="main">
+
+    <!-- BREAKING NEWS TICKER + ALERT BAR -->
+    <div class="topbar">
+      <div class="news-ticker">
+        <div class="ticker-label" id="tickerLabel">&#9889; BREAKING</div>
+        <div class="ticker-track">
+          <span class="ticker-content" id="tickerContent">Loading live headlines...</span>
+        </div>
+      </div>
+      <div class="live-update-bar">
+        <span><span class="live-pulse"></span> <span id="liveStatus">Connecting to live feeds...</span></span>
+        <span>Next update: <span id="nextUpdate">--:--</span></span>
+      </div>
+      <div class="alert-bar amber" id="alertBar">
+        &#9888; AMBER &mdash; TALKS COLLAPSED | US Hormuz blockade active. Ceasefire fragile. Book flexible exit flights. Monitor closely.
+      </div>
+      <div class="countdown-strip">
+        <div class="cd-item">
+          <div class="cd-label">DXB Airline Cap</div>
+          <div class="cd-value warning" id="cdTalks">--:--:--</div>
+        </div>
+        <div class="cd-item">
+          <div class="cd-label">EASA Review</div>
+          <div class="cd-value warning" id="cdEasa">--:--:--</div>
+        </div>
+        <div class="cd-item">
+          <div class="cd-label">Air France Return?</div>
+          <div class="cd-value" id="cdStrike">Pending</div>
+        </div>
+        <div class="cd-item">
+          <div class="cd-label">Ceasefire Expires</div>
+          <div class="cd-value urgent" id="cdCeasefire">--d --h --m</div>
+        </div>
+        <div class="cd-item">
+          <div class="cd-label">Page Refresh</div>
+          <div class="cd-value" id="cdRefresh">15:00</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ===== EVACUATION ALERT ===== -->
+      <div id="evac" class="section-anchor"></div>
+      <div class="section-title">&#9888; Evacuation Alert Level</div>
+      <div class="card highlight">
+        <div class="traffic-light-bar">
+          <div class="tl-seg tl-green" onclick="setAlert('green')" title="Click to set GREEN">GREEN<br>Safe to Stay</div>
+          <div class="tl-seg tl-amber active" onclick="setAlert('amber')" title="Click to set AMBER">AMBER<br>Prepare to Leave</div>
+          <div class="tl-seg tl-red" onclick="setAlert('red')" title="Click to set RED">RED<br>Leave Now</div>
+        </div>
+        <p style="font-size:0.78em;color:var(--muted);text-align:center;">Click to manually override alert level. Auto-saved in your browser.</p>
+
+        <h4 style="margin-top:14px;">Escalation Trigger Dashboard</h4>
+        <p style="font-size:0.82em;color:var(--muted);margin-bottom:10px;">3+ red triggers = upgrade to RED. All green = downgrade to GREEN.</p>
+        <div class="trigger-row"><div class="trigger-dot g"></div><div class="trigger-name">Ceasefire holding?</div><div class="trigger-status">2-week truce active since 8 Apr <span class="tag green">YES &mdash; fragile</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot r"></div><div class="trigger-name">Islamabad talks progressing?</div><div class="trigger-status">Talks collapsed 12 Apr; Trump announces Hormuz blockade <span class="tag red">COLLAPSED</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot a"></div><div class="trigger-name">DXB airport operational?</div><div class="trigger-status" id="trigDxb">220+ flights/day (~20% pre-crisis). Foreign airline cap from 20 Apr <span class="tag orange">LIMITED</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot r"></div><div class="trigger-name">European carriers flying to UAE?</div><div class="trigger-status">BA, LH, KLM, AF suspended. EASA review 24 Apr <span class="tag red">NO</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot r"></div><div class="trigger-name">Strait of Hormuz open?</div><div class="trigger-status">US naval blockade announced 12 Apr. Ship traffic halted <span class="tag red">BLOCKED</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot a"></div><div class="trigger-name">Active attacks on UAE?</div><div class="trigger-status">Ceasefire holding but fragile. Gulf states report post-truce attacks <span class="tag orange">REDUCED</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot g"></div><div class="trigger-name">UAE airspace open?</div><div class="trigger-status">Partially; intermittent closures during intercepts <span class="tag green">OPEN</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot r"></div><div class="trigger-name">Trump threatening escalation?</div><div class="trigger-status">Ordered Hormuz naval blockade 12 Apr. Talks collapsed <span class="tag red">ESCALATING</span></div></div>
+        <div class="trigger-row"><div class="trigger-dot a"></div><div class="trigger-name">Lebanon escalation contained?</div><div class="trigger-status">Israel bombing Beirut; 254+ killed; not covered by ceasefire <span class="tag orange">NO</span></div></div>
+      </div>
+
+      <div class="card danger">
+        <h4 style="color:var(--accent);">&#128680; RED ALERT TRIGGERS &mdash; Leave IMMEDIATELY if ANY occur:</h4>
+        <ul style="margin-top:8px;font-size:0.9em;">
+          <li>Islamabad talks collapse / either side walks out</li>
+          <li>Ceasefire formally ends or violated with major strike</li>
+          <li>UAE airspace fully closed again</li>
+          <li>Trump announces resumption of strikes on Iran</li>
+          <li>Iran re-closes Strait of Hormuz</li>
+          <li>Major Iranian strike penetrates UAE air defences (not just debris)</li>
+          <li>Your embassy issues formal evacuation order</li>
+        </ul>
+      </div>
+
+      <!-- ===== LIVE NEWS + VIDEO ===== -->
+      <div id="livenews" class="section-anchor"></div>
+      <div class="section-title">&#9889; Live Conflict Updates <span style="font-size:0.6em;color:var(--safe);font-weight:400;">(auto-refreshes every 5 minutes)</span></div>
+      <div class="live-split">
+        <div class="card" id="liveUpdatesPanel" style="min-height:100px;padding:16px 20px;">
+          <div style="color:var(--muted);font-size:0.85em;">&#8987; Fetching live updates from news feeds...</div>
+        </div>
+        <div class="live-video-card">
+          <div class="live-video-header"><span class="vdot"></span> Al Jazeera English &mdash; LIVE</div>
+          <div class="live-video-wrap">
+            <iframe src="https://players.brightcove.net/665003303001/AvByVmBYDu_default/index.html?videoId=6368602483112" allow="autoplay; encrypted-media" allowfullscreen loading="lazy"></iframe>
+          </div>
+          <div class="live-video-footer">
+            <a href="https://www.aljazeera.com/video/live" target="_blank">Open full screen on aljazeera.com &rarr;</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== EXIT ROUTES ===== -->
+      <div id="routes" class="section-anchor"></div>
+      <div class="section-title">&#9992; Exit Routes from the UAE</div>
+
+      <div class="route-grid">
+        <div class="route-card available" style="grid-column:span 2;">
+          <span class="route-badge go">OPTION A &mdash; AVAILABLE</span>
+          <h4>DXB &#8594; International (Emirates / flydubai)</h4>
+          <p><strong id="dxbRouteText">220+ combined departures/day (~20% pre-crisis). Emirates at 70% capacity — 150 flights to 125 destinations. flydubai 73 dep/day. NOTE: From 20 Apr, non-UAE airlines capped at 1 flight/day at DXB. Flexible rebooking through 31 May.</strong><br><br>
+          <strong>&#8594; Book flexible exit tickets for your family on your preferred airline for the next 48-72 hours as insurance.</strong></p>
+        </div>
+        <div class="route-card available">
+          <span class="route-badge go">OPTION B &mdash; AVAILABLE</span>
+          <h4>AUH &#8594; International (Etihad)</h4>
+          <p id="auhRouteText">90-95 flights/day from Abu Dhabi. Etihad at ~84 daily departures to ~80 destinations — 60% of pre-crisis capacity. Gradual climb from 70-80 in March. Good backup if DXB flights cancel. Drive from Dubai ~1.5h.</p>
+        </div>
+        <div class="route-card available">
+          <span class="route-badge go">OPTION C &mdash; OVERLAND BACKUP</span>
+          <h4>Overland &#8594; Oman &#8594; Muscat (MCT)</h4>
+          <p><strong>Dubai &#8594; Hatta border: 1.5h. Hatta &#8594; Muscat: 3h. Total ~4.5h.</strong> Abu Dhabi &#8594; Khatm Al Shikla: ~5h. Borders open 24/7. Oman largely unaffected by strikes. International flights from Muscat available. <strong>Check your passport's Oman visa requirements before relying on this route.</strong><br><br>
+          <strong style="color:var(--warning);">&#9888; WARNING:</strong> Mass exodus caused severe border delays at Hatta in mid-March. If situation escalates, leave at dawn.</p>
+        </div>
+        <div class="route-card available">
+          <span class="route-badge go">OPTION D &mdash; AVAILABLE</span>
+          <h4>Overland &#8594; Saudi Arabia &#8594; Riyadh/Jeddah</h4>
+          <p>Abu Dhabi &#8594; Ghuwaifat border &#8594; Riyadh (~8h drive). International flights from Riyadh and Jeddah. Check Saudi visa requirements for your nationality.</p>
+        </div>
+        <div class="route-card limited">
+          <span class="route-badge no">NOT AVAILABLE</span>
+          <h4>European Carriers (BA, Lufthansa, Air France/KLM)</h4>
+          <p>ALL suspended to UAE (EASA conflict zone advisory CZIB 2026-03-R6). <strong>Next EASA review: 24 April.</strong> Air France earliest potential return: 3 May. KLM: 17 May. BA targeting 1 July restart. Lufthansa/Swiss: 31 May. <strong>Do not rely on European airlines for evacuation.</strong></p>
+        </div>
+        <div class="route-card limited">
+          <span class="route-badge caution">LAST RESORT</span>
+          <h4>Private Charter</h4>
+          <p>Available from Al Maktoum (DWC) and smaller airports. Cost: $200K-$250K to Europe. War risk insurance adds premium. Emergency only.</p>
+        </div>
+      </div>
+
+      <div class="card success" style="margin-top:12px;">
+        <h4 style="color:var(--safe);">&#127758; Important Notes for All Nationalities</h4>
+        <ul style="font-size:0.88em;margin-top:8px;">
+          <li><strong>Multiple countries have issued "AVOID ALL TRAVEL" advisories</strong> for the UAE, including the US, UK, Canada, Australia, Germany, France, Netherlands, India, and more.</li>
+          <li><strong>Register with your embassy:</strong> All team members should register with their respective embassies for evacuation notices and potential charter flights.</li>
+          <li><strong>Check Oman visa requirements:</strong> Some nationalities get visa-free entry; others need an e-visa. Verify BEFORE relying on the overland route.</li>
+          <li><strong>Check Saudi visa requirements:</strong> Varies by nationality. Verify transit/tourist visa eligibility.</li>
+          <li><strong>Embassy charter flights:</strong> The US, UK, Canada, India, and other countries arranged government-funded evacuation flights in early March. Monitor your embassy for future charters.</li>
+          <li><strong>Flexible tickets:</strong> Emirates and Etihad offer free rebooking through 30 April for tickets affected by the conflict.</li>
+        </ul>
+      </div>
+
+      <!-- ===== FAMILY CHECKLIST ===== -->
+      <div id="checklist" class="section-anchor"></div>
+      <div class="section-title">&#9745; Personal Evacuation Checklist (saved in your browser)</div>
+      <div class="card">
+        <div class="checklist-progress"><div class="bar" id="checkBar" style="width:0%;"></div></div>
+        <div style="text-align:center;font-size:0.85em;color:var(--muted);margin-bottom:10px;"><span id="checkCount">0</span> of <span id="checkTotal">0</span> items complete</div>
+        <div id="checklistContainer"></div>
+      </div>
+
+      <!-- ===== FLIGHTS ===== -->
+      <div id="flights" class="section-anchor"></div>
+      <div class="section-title">&#128747; UAE Flight Status</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kv good" id="kpiDxb">220+</div><div class="kl">DXB Flights/Day</div><div class="kc up" id="kpiDxbNote">~20% pre-crisis level</div></div>
+        <div class="kpi-card"><div class="kv good" id="kpiAuh">~95</div><div class="kl">AUH Flights/Day</div><div class="kc up" id="kpiAuhNote">60% capacity (Etihad)</div></div>
+        <div class="kpi-card"><div class="kv bad">0</div><div class="kl">EU Carriers to UAE</div><div class="kc down">Suspended thru May+</div></div>
+        <div class="kpi-card"><div class="kv warn" id="kpiEasa">24 Apr</div><div class="kl">EASA Next Review</div><div class="kc down">CZIB 2026-03-R6</div></div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Airline</th><th>Status</th><th>Capacity</th><th>International Routes</th></tr></thead>
+          <tbody>
+            <tr><td><strong>Emirates</strong></td><td><span class="tag green">Operating</span></td><td>~70% (150 dep/day, 125 destinations)</td><td><strong>A380 back on 8 routes. Flexible rebooking thru 31 May</strong></td></tr>
+            <tr><td>flydubai</td><td><span class="tag green">Operating</span></td><td>73 dep/day</td><td>Regional &amp; select European routes</td></tr>
+            <tr><td>Etihad</td><td><span class="tag green">Operating</span></td><td>60% from AUH (~84 dep/day)</td><td>Europe, Asia, Americas from AUH</td></tr>
+            <tr><td>Qatar Airways</td><td><span class="tag orange">Limited</span></td><td>Rebuilding slower</td><td>Connect via Doha</td></tr>
+            <tr><td>British Airways</td><td><span class="tag red">Suspended</span></td><td>0%</td><td>N/A &mdash; targeting 1 Jul restart</td></tr>
+            <tr><td>Lufthansa Group</td><td><span class="tag red">Suspended</span></td><td>0%</td><td>N/A thru 31 May. Pilot strike 13-14 Apr</td></tr>
+            <tr><td>Air France</td><td><span class="tag red">Suspended</span></td><td>0%</td><td>Earliest return: 3 May</td></tr>
+            <tr><td>KLM</td><td><span class="tag red">Suspended</span></td><td>0%</td><td>Earliest return: 17 May</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== MARKETS ===== -->
+      <div id="markets" class="section-anchor"></div>
+      <div class="section-title">&#128200; Market Data</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kv bad" id="kpiBrent">~$101</div><div class="kl">Brent Crude</div><div class="kc down" id="kpiBrentNote">+6.5% after blockade (13 Apr)</div></div>
+        <div class="kpi-card"><div class="kv good" id="kpiAdx">9,869</div><div class="kl">ADX General</div><div class="kc up">+2.85% (8 Apr)</div></div>
+        <div class="kpi-card"><div class="kv bad">-16.4%</div><div class="kl">DFM March</div><div class="kc down">Worst since pandemic</div></div>
+        <div class="kpi-card"><div class="kv bad" id="kpiVessels">500+</div><div class="kl">Tankers Trapped</div><div class="kc down" id="kpiVesselsNote">400 loaded + 100 empty. Traffic halted</div></div>
+      </div>
+
+      <!-- ===== BOND TRACKER ===== -->
+      <div id="bonds" class="section-anchor"></div>
+      <div class="section-title">&#127981; Bahrain Gov Bond Tracker <span style="font-size:0.6em;color:var(--muted);font-weight:400;">(auto-refreshes every 5 min)</span></div>
+      <div class="card">
+        <div class="bond-context-bar">
+          <span><strong>Instrument:</strong> Bahrain Government USD Bond</span>
+          <span><strong>Purchase Yield:</strong> 8.00% p.a.</span>
+          <span><strong>Purchased:</strong> ~Apr 2025 (1 year ago)</span>
+          <span><strong>Duration:</strong> ~5.5 years (modified)</span>
+          <span id="bondLastUpdate" style="margin-left:auto;font-style:italic;">Updating...</span>
+        </div>
+
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kv warn" id="bondCurrentYield">8.45%</div>
+            <div class="kl">Est. Current Yield</div>
+            <div class="kc down" id="bondYieldChange">+0.45% vs purchase</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kv warn" id="bondPrice">$97.5</div>
+            <div class="kl">Est. Market Price</div>
+            <div class="kc">per $100 face value</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kv good">$8.00</div>
+            <div class="kl">Coupon Earned (1yr)</div>
+            <div class="kc up">per $100 face value</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kv warn" id="bondTotalReturn">+$5.5</div>
+            <div class="kl">Est. Total Return</div>
+            <div class="kc" id="bondTotalReturnPct">Coupon + capital P&amp;L</div>
+          </div>
+        </div>
+
+        <!-- Traffic light recommendation -->
+        <div class="bond-rec">
+          <div class="bond-rec-seg bond-rec-green">&#9989; SELL<br><span style="font-size:0.8em;font-weight:400;">Value rising — lock in profit</span></div>
+          <div class="bond-rec-seg bond-rec-amber active">&#9888; HOLD<br><span style="font-size:0.8em;font-weight:400;">Stable — coupon compensating</span></div>
+          <div class="bond-rec-seg bond-rec-red">&#128680; SELL ALERT<br><span style="font-size:0.8em;font-weight:400;">Losing value — cut losses</span></div>
+        </div>
+        <div class="bond-rec-text" id="bondRecText" style="color:var(--warning);">&#9888; HOLD — Bond is slightly below par due to elevated Gulf risk premium, but your 8% coupon income keeps total return positive. Hold until yields fall (price recovers) or situation stabilises.</div>
+
+        <!-- Manual yield override -->
+        <div class="bond-yield-input">
+          <label>Manually set current yield (%):</label>
+          <input type="number" id="bondYieldManual" step="0.05" min="4" max="15" placeholder="8.45">
+          <button onclick="manualBondUpdate()">Update</button>
+          <span style="color:var(--muted);font-size:0.78em;">Enter yield from Bloomberg/Reuters to recalculate</span>
+        </div>
+
+        <!-- Bond news feed -->
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);" id="bondNewsPanel">
+          <div style="font-size:0.72em;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Latest Bahrain Bond &amp; Gulf Credit News</div>
+          <div style="color:var(--muted);font-size:0.82em;">&#8987; Fetching bond market news...</div>
+        </div>
+      </div>
+
+      <!-- ===== MISSILES ===== -->
+      <div id="missiles" class="section-anchor"></div>
+      <div class="section-title">&#127919; UAE Missile &amp; Drone Tracker (Cumulative)</div>
+      <div class="missile-grid">
+        <div class="missile-card"><div class="mv" style="color:#3498db;">537</div><div class="ml">Ballistic Missiles</div></div>
+        <div class="missile-card"><div class="mv" style="color:#9b59b6;">26</div><div class="ml">Cruise Missiles</div></div>
+        <div class="missile-card"><div class="mv" style="color:#e67e22;">2,256</div><div class="ml">Drones / UAVs</div></div>
+        <div class="missile-card total"><div class="mv">2,819</div><div class="ml">Total Intercepted</div></div>
+        <div class="missile-card cas"><div class="mv">13 / 221</div><div class="ml">Killed / Injured</div></div>
+      </div>
+      <div class="card">
+        <h4>Daily Interception Log</h4>
+        <div class="scroll-log">
+          <table class="data-table">
+            <thead><tr><th>Date</th><th>Ballistic</th><th>Cruise</th><th>Drones</th><th>Total</th><th>Notable</th></tr></thead>
+            <tbody>
+              <tr><td><strong>8 Apr</strong></td><td>17</td><td>0</td><td>35</td><td>52</td><td>Post-ceasefire attacks continued</td></tr>
+              <tr><td><strong>4 Apr</strong></td><td>23</td><td>0</td><td>56</td><td>79</td><td>Heaviest drone barrage of conflict</td></tr>
+              <tr><td><strong>3 Apr</strong></td><td>18</td><td>4</td><td>47</td><td>69</td><td>KEZAD/Habshan hit; 1 killed, 16 injured</td></tr>
+              <tr><td><strong>2 Apr</strong></td><td>19</td><td>0</td><td>26</td><td>45</td><td>Brent peaked ~$128/b</td></tr>
+              <tr><td><strong>1 Apr</strong></td><td>5</td><td>0</td><td>35</td><td>40</td><td>Tourism relief package activated</td></tr>
+              <tr><td><strong>31 Mar</strong></td><td>8</td><td>4</td><td>36</td><td>48</td><td>4 injured in southern Dubai</td></tr>
+              <tr><td><strong>30 Mar</strong></td><td>11</td><td>0</td><td>27</td><td>38</td><td>Kuwaiti tanker hit off Dubai</td></tr>
+              <tr><td><strong>16 Mar</strong></td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Oil tanker explosion from drone</td></tr>
+              <tr><td><strong>1 Mar</strong></td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>&mdash;</td><td>Dubai Airport debris; first retaliation</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ===== FMCG ===== -->
+      <div id="fmcg" class="section-anchor"></div>
+      <div class="section-title">&#128722; FMCG Sector Impact</div>
+      <div class="kpi-grid">
+        <div class="kpi-card"><div class="kv bad">70%</div><div class="kl">Food Imports Disrupted</div><div class="kc down">Mid-March peak</div></div>
+        <div class="kpi-card"><div class="kv good">4-6 mo</div><div class="kl">Strategic Reserves</div><div class="kc up">UAE gov confirmed</div></div>
+        <div class="kpi-card"><div class="kv bad">-35-38%</div><div class="kl">Discretionary Retail</div><div class="kc down">Electronics, apparel</div></div>
+        <div class="kpi-card"><div class="kv warn">+2.4%</div><div class="kl">FAO Food Index (Mar)</div><div class="kc down">2nd month up</div></div>
+        <div class="kpi-card"><div class="kv warn">+23%</div><div class="kl">Sulfur Prices</div><div class="kc down">Packaging impact</div></div>
+        <div class="kpi-card"><div class="kv warn">+5.1%</div><div class="kl">Vegetable Oil Index</div><div class="kc down">Highest since 2022</div></div>
+      </div>
+      <div class="card">
+        <table class="data-table">
+          <thead><tr><th>Category</th><th>Impact</th><th>Details</th></tr></thead>
+          <tbody>
+            <tr><td>Fresh Produce</td><td><span class="tag red">Severe</span></td><td>Iran export ban. Sourcing shifted to India, East Africa at higher cost.</td></tr>
+            <tr><td>Staples</td><td><span class="tag orange">High</span></td><td>Panic-buying in early Mar resolved. Reserves cover 4-6 months.</td></tr>
+            <tr><td>Dairy &amp; Chilled</td><td><span class="tag orange">High</span></td><td>Cold chain disrupted. Local dairy partial buffer.</td></tr>
+            <tr><td>Vegetable Oils</td><td><span class="tag orange">High</span></td><td>FAO index +5.1%. Palm oil at highest since 2022.</td></tr>
+            <tr><td>Packaging</td><td><span class="tag orange">High</span></td><td>EGA hit 28 Mar. Aluminium/PET/sulfur costs surging.</td></tr>
+            <tr><td>Beverages</td><td><span class="tag yellow">Medium</span></td><td>Local bottling buffer. Imported specialties delayed.</td></tr>
+            <tr><td>Personal Care</td><td><span class="tag yellow">Medium</span></td><td>Consumer pullback on discretionary. Supply available.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ===== RISK ASSESSMENT ===== -->
+      <div id="risks" class="section-anchor"></div>
+      <div class="section-title">&#128680; Risk Assessment</div>
+      <div class="card" style="border-left:4px solid var(--accent);"><strong style="color:var(--accent);">CRITICAL:</strong> Supply Chain &mdash; Hormuz closed 40d; 800+ ships stranded; 2mo to normalise. Hapag-Lloyd: $50-60M/wk.</div>
+      <div class="card" style="border-left:4px solid var(--accent);margin-top:8px;"><strong style="color:var(--accent);">CRITICAL:</strong> Energy &mdash; Brent spiked $128/b; EIA: $115/b Q2 avg, $88/b Q4 if conflict ends.</div>
+      <div class="card" style="border-left:4px solid var(--warning);margin-top:8px;"><strong style="color:var(--warning);">HIGH:</strong> Aviation &mdash; ~50% capacity; EU carriers out; war risk $70-150K/flight for internationals.</div>
+      <div class="card" style="border-left:4px solid var(--warning);margin-top:8px;"><strong style="color:var(--warning);">HIGH:</strong> Markets &mdash; DFM -16.4% Mar; Goldman: 30% US recession risk. ADX recovering.</div>
+      <div class="card" style="border-left:4px solid var(--warning);margin-top:8px;"><strong style="color:var(--warning);">HIGH:</strong> Insurance &mdash; Marine P&I cancelled. Aviation war risk premiums surging.</div>
+      <div class="card" style="border-left:4px solid var(--caution);margin-top:8px;"><strong style="color:#d4a017;">MEDIUM:</strong> Sanctions &mdash; UN reimposed. UAE may freeze Iranian assets. Shell company exposure.</div>
+      <div class="card" style="border-left:4px solid var(--caution);margin-top:8px;"><strong style="color:#d4a017;">MEDIUM:</strong> Physical Security &mdash; 2,819 projectiles intercepted. Debris damage in Dubai/Abu Dhabi.</div>
+
+      <!-- ===== CEASEFIRE ===== -->
+      <div id="ceasefire" class="section-anchor"></div>
+      <div class="section-title">&#9878; Ceasefire &amp; Negotiations</div>
+      <div class="card highlight">
+        <h4>Ceasefire (8 April &mdash; ~22 April) &mdash; <span style="color:var(--accent);">TALKS COLLAPSED 12 APR</span></h4>
+        <ul style="font-size:0.9em;margin-top:8px;">
+          <li><strong style="color:var(--accent);">12 Apr:</strong> US-Iran talks collapsed. Trump ordered US Navy blockade of Strait of Hormuz</li>
+          <li><strong>11 Apr:</strong> 2 US warships transited Hormuz; 3 supertankers made partial transits</li>
+          <li><strong>10 Apr:</strong> Islamabad talks began — major gaps on nuclear enrichment. Iran published ceasefire plan US says was "not the one agreed"</li>
+          <li><strong>13 Apr:</strong> Ship traffic effectively halted. ~400 loaded tankers trapped in Gulf. ~20,000 Indian crew stranded</li>
+        </ul>
+        <h4 style="margin-top:14px;color:var(--accent);">Status: CRITICAL ESCALATION</h4>
+        <ul style="font-size:0.9em;margin-top:8px;">
+          <li><strong>Hormuz:</strong> US naval blockade active. Iran imposed $1M+ tolls per ship; US intercepting toll-paying vessels</li>
+          <li><strong>Nuclear:</strong> Iran demands enrichment right; US calls it "red line" — no agreement</li>
+          <li><strong>Lebanon:</strong> Israel continues to attack Lebanon despite ceasefire</li>
+          <li><strong>Oil:</strong> WTI up ~7% to $103; Brent up ~6.5% to $101. Analysts say normal flows won't resume until July even if resolved today</li>
+        </ul>
+      </div>
+
+      <!-- ===== TIMELINE ===== -->
+      <div id="timeline" class="section-anchor"></div>
+      <div class="section-title">&#128197; Conflict Timeline</div>
+      <div class="card">
+        <div style="border-left:3px solid var(--border);padding-left:16px;">
+          <div style="margin-bottom:12px;"><strong style="color:var(--accent);">13 Apr</strong> &mdash; Ship traffic halted at Hormuz after US blockade. 500+ tankers trapped. Oil spikes.</div>
+          <div style="margin-bottom:12px;"><strong style="color:var(--accent);">12 Apr</strong> &mdash; US-Iran talks collapse. Trump orders US Navy blockade of Strait of Hormuz.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">11 Apr</strong> &mdash; 2 US warships transit Hormuz. 3 supertankers make partial crossing.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">10 Apr</strong> &mdash; Islamabad talks begin. EASA extends CZIB to 24 Apr. Major gaps on nuclear issue.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">8 Apr</strong> &mdash; 2-week ceasefire. Hormuz to reopen. Islamabad talks set for 10 Apr.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">2 Apr</strong> &mdash; Brent peaks ~$128/b.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">1 Apr</strong> &mdash; UAE $1B tourism relief package activated.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">28 Mar</strong> &mdash; Iran hits Emirates Global Aluminium. Packaging disruption.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">14 Mar</strong> &mdash; Mass exodus from UAE to Oman via Hatta border.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">8 Mar</strong> &mdash; Brent &gt;$100/b. IEA: "largest supply disruption in history."</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">5 Mar</strong> &mdash; P&amp;I insurance cancelled. Major carriers suspend Hormuz.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">3 Mar</strong> &mdash; US orders personnel out of UAE. Charter flights. Private jets $250K.</div>
+          <div style="margin-bottom:12px;"><strong style="color:#3498db;">1 Mar</strong> &mdash; Iran retaliates. Hormuz closed. Dubai Airport debris hit.</div>
+          <div style="margin-bottom:0;"><strong style="color:#3498db;">28 Feb</strong> &mdash; US-Israel strike Iran. Day 1 of conflict.</div>
+        </div>
+      </div>
+
+      <!-- ===== ACTIONS ===== -->
+      <div id="actions" class="section-anchor"></div>
+      <div class="section-title">&#9989; Recommended Actions</div>
+      <div class="card">
+        <h4>Immediate (This Week)</h4>
+        <ul style="font-size:0.9em;margin-top:8px;">
+          <li>Book flexible exit flights for yourself and family on Emirates or Etihad for the next 48-72 hours</li>
+          <li>Register with your embassy for evacuation notices and charter flights</li>
+          <li>Pack go-bags for all family members; keep car fuelled for overland route to Oman</li>
+          <li>Review Business Continuity Plans; brief team on ceasefire triggers</li>
+          <li>Check insurance policies for war risk exclusions and renewal terms</li>
+          <li>Screen client/vendor lists for Iran-linked entities (sanctions compliance)</li>
+        </ul>
+        <h4 style="margin-top:14px;">FMCG-Specific</h4>
+        <ul style="font-size:0.9em;margin-top:8px;">
+          <li>Safety stock to 60-90 days on staples</li>
+          <li>Alternative sourcing: India, East Africa for produce</li>
+          <li>Lock forward pricing: aluminium, PET, corrugated</li>
+          <li>Accelerate value-tier SKUs for consumer trade-down</li>
+          <li>Monitor Iran food export ban status</li>
+        </ul>
+      </div>
+
+      <!-- ===== QUICK LINKS GRID ===== -->
+      <div class="section-title">&#128279; Live Data &amp; Quick Links</div>
+      <div class="quick-grid">
+        <a class="quick-link" href="https://www.emirates.com/ae/english/manage-booking/flight-status/" target="_blank"><div class="ql-icon">&#9992;</div><div><div class="ql-title">Emirates Flight Status</div><div class="ql-text">Check your flight in real-time</div></div></a>
+        <a class="quick-link" href="https://www.emirates.com/ae/english/book/" target="_blank"><div class="ql-icon">&#127903;</div><div><div class="ql-title">Book Emirates</div><div class="ql-text">Search &amp; book flights</div></div></a>
+        <a class="quick-link" href="https://www.etihad.com/en/book" target="_blank"><div class="ql-icon">&#127903;</div><div><div class="ql-title">Book Etihad</div><div class="ql-text">Search &amp; book flights (AUH)</div></div></a>
+        <a class="quick-link" href="https://hormuzstraitmonitor.com/" target="_blank"><div class="ql-icon">&#128674;</div><div><div class="ql-title">Hormuz Live Tracker</div><div class="ql-text">Ship movements &amp; oil flow</div></div></a>
+        <a class="quick-link" href="https://www.flightaware.com/live/airport/OMDB" target="_blank"><div class="ql-icon">&#128747;</div><div><div class="ql-title">DXB Live Flights</div><div class="ql-text">FlightAware real-time</div></div></a>
+        <a class="quick-link" href="https://www.aljazeera.com/news/liveblog/2026/4/6/iran-war-live-tehran-rejects-trumps-tuesday-deadline-on-strait-of-hormuz" target="_blank"><div class="ql-icon">&#128240;</div><div><div class="ql-title">Al Jazeera Live</div><div class="ql-text">Iran war liveblog</div></div></a>
+        <a class="quick-link" href="https://www.cnn.com/2026/04/07/world/live-news/iran-war-trump-us-israel" target="_blank"><div class="ql-icon">&#128250;</div><div><div class="ql-title">CNN Live Updates</div><div class="ql-text">Conflict live coverage</div></div></a>
+        <a class="quick-link" href="https://tradingeconomics.com/commodity/brent-crude-oil" target="_blank"><div class="ql-icon">&#128200;</div><div><div class="ql-title">Oil Prices Live</div><div class="ql-text">Brent crude real-time</div></div></a>
+        <a class="quick-link" href="https://tradingeconomics.com/united-arab-emirates/stock-market" target="_blank"><div class="ql-icon">&#128202;</div><div><div class="ql-title">ADX/DFM Live</div><div class="ql-text">UAE stock markets</div></div></a>
+        <a class="quick-link" href="https://safeairspace.net/" target="_blank"><div class="ql-icon">&#127758;</div><div><div class="ql-title">Safe Airspace</div><div class="ql-text">Conflict zone map</div></div></a>
+        <a class="quick-link" href="https://www.google.com/maps/dir/Dubai/Muscat,+Oman" target="_blank"><div class="ql-icon">&#128663;</div><div><div class="ql-title">Dubai &#8594; Muscat Route</div><div class="ql-text">Google Maps (Hatta border)</div></div></a>
+      </div>
+
+      <!-- SOURCES -->
+      <div class="section-title" style="font-size:0.9em;">Sources &amp; Data</div>
+      <div class="card" style="font-size:0.8em;color:var(--muted);">
+        <p>Al Jazeera, CBS News, CNN, Carnegie Endowment, TIME, EIA, IMF, The National, Gulf News, Bloomberg, CNBC, Emirates, Etihad, Wego, TravelPirates, LoyaltyLobby, FlightAware, Wikipedia. Full source list in the detailed briefing document.</p>
+        <p style="margin-top:8px;"><strong>Disclaimer:</strong> Compiled from public sources for internal use. Not legal/financial/investment advice. Verify independently. Situation is fluid. Auto-refreshes every 15 minutes; analysis content updated by request.</p>
+      </div>
+
+      <div class="dash-footer">
+        Last analysis update: 13 April 2026 | Team Edition | Live news updates every 10 minutes | Page auto-refreshes every 15 minutes
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /dashboard -->
+
+<script>
+// ===== LIVE CLOCK =====
+function updateClock(){
+  const now=new Date();
+  // Dubai is UTC+4
+  const dubai=new Date(now.toLocaleString('en-US',{timeZone:'Asia/Dubai'}));
+  document.getElementById('clock').textContent=dubai.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  document.getElementById('dateLine').textContent=dubai.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  // Day count since 28 Feb 2026
+  const conflictStart=new Date(2026,1,28);
+  const dayCount=Math.floor((dubai-conflictStart)/(1000*60*60*24))+1;
+  document.getElementById('dayCount').textContent=dayCount;
+}
+setInterval(updateClock,1000);
+updateClock();
+
+// ===== COUNTDOWNS =====
+function updateCountdowns(){
+  const now=new Date();
+  // Islamabad talks: Collapsed 12 Apr. DXB foreign airline cap effective 20 Apr
+  const talks=new Date('2026-04-20T00:00:00Z');
+  // EASA review: Next review 24 Apr
+  const easa=new Date('2026-04-24T08:00:00Z');
+  // Air France earliest potential return: 3 May
+  const strike=new Date('2026-05-03T00:00:00Z');
+  // Ceasefire expiry: ~22 Apr 2026
+  const ceasefire=new Date('2026-04-22T00:00:00Z');
+
+  function fmt(target){
+    const diff=target-now;
+    if(diff<=0) return '<span style="color:var(--accent);">PASSED</span>';
+    const d=Math.floor(diff/(1000*60*60*24));
+    const h=Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+    const m=Math.floor((diff%(1000*60*60))/(1000*60));
+    const s=Math.floor((diff%(1000*60))/1000);
+    if(d>0) return d+'d '+h+'h '+m+'m';
+    if(h>0) return h+'h '+m+'m '+s+'s';
+    return m+'m '+s+'s';
+  }
+
+  document.getElementById('cdTalks').innerHTML=fmt(talks);
+  document.getElementById('cdEasa').innerHTML=fmt(easa);
+  document.getElementById('cdStrike').innerHTML=fmt(strike);
+  document.getElementById('cdCeasefire').innerHTML=fmt(ceasefire);
+
+  // Refresh countdown (15 min = 900s)
+  const pageLoad=window._pageLoadTime||(window._pageLoadTime=Date.now());
+  const elapsed=Math.floor((Date.now()-pageLoad)/1000);
+  const remaining=900-elapsed;
+  if(remaining>0){
+    const rm=Math.floor(remaining/60);
+    const rs=remaining%60;
+    document.getElementById('cdRefresh').textContent=rm+':'+(rs<10?'0':'')+rs;
+  } else {
+    document.getElementById('cdRefresh').innerHTML='<span style="color:var(--safe);">Refreshing...</span>';
+  }
+}
+setInterval(updateCountdowns,1000);
+updateCountdowns();
+
+// ===== ALERT LEVEL =====
+function setAlert(level){
+  const bar=document.getElementById('alertBar');
+  const segs=document.querySelectorAll('.tl-seg');
+  segs.forEach(s=>s.classList.remove('active'));
+
+  bar.className='alert-bar '+level;
+  if(level==='green'){
+    bar.innerHTML='&#9989; GREEN &mdash; CEASEFIRE ACTIVE | Situation stable. Flights operating. Continue monitoring. Islamabad talks ongoing.';
+    document.querySelector('.tl-green').classList.add('active');
+  } else if(level==='amber'){
+    bar.innerHTML='&#9888; AMBER &mdash; TALKS COLLAPSED | US Hormuz blockade active. Ceasefire fragile. Book flexible exit flights. Monitor closely.';
+    document.querySelector('.tl-amber').classList.add('active');
+  } else {
+    bar.innerHTML='&#128680; RED &mdash; LEAVE IMMEDIATELY | Take next available flight from DXB/AUH or drive to Oman via Hatta NOW';
+    document.querySelector('.tl-red').classList.add('active');
+  }
+  localStorage.setItem('uaeCrisisAlertTeam',level);
+}
+// Restore saved alert
+const savedAlert=localStorage.getItem('uaeCrisisAlertTeam');
+if(savedAlert) setAlert(savedAlert);
+
+// ===== EVACUATION CHECKLIST (localStorage) =====
+const checklistItems=[
+  {id:'t1',text:'Passports ready for all family members (6+ months validity). Keep in a single waterproof pouch.'},
+  {id:'t2',text:'Go-bags packed for each family member (clothes, chargers, snacks, essential medication)'},
+  {id:'t3',text:'Cash ready: AED 3,000-5,000 + USD/EUR for your destination'},
+  {id:'t4',text:'Flexible exit flights booked on Emirates or Etihad for next 48-72 hours (insurance tickets)'},
+  {id:'t5',text:'Registered with your embassy for evacuation notices and charter flights'},
+  {id:'t6',text:'Embassy emergency number saved in phone contacts'},
+  {id:'t7',text:'Car fuelled + overland route to Oman mapped (offline Google Maps downloaded)'},
+  {id:'t8',text:'Oman visa requirements checked for your nationality'},
+  {id:'t9',text:'Emirates rebooking hotline saved: +971 600 555 555 | Etihad: +971 4 294 2222'},
+  {id:'t10',text:'Bank/credit cards tested for international use at your destination. Backup card from different bank.'},
+  {id:'t11',text:'Accommodation at destination identified for first 3-5 nights'},
+  {id:'t12',text:'Critical documents uploaded to cloud: Employment contract, EJARI, vehicle reg, insurance policies'},
+  {id:'t13',text:'Emirates ID cards for all family members packed with passports'},
+  {id:'t14',text:'Children\'s school / dependents\' care facilities notified of potential absence'},
+  {id:'t15',text:'Family communication plan agreed: meeting point if comms go down + WhatsApp check-in group'},
+  {id:'t16',text:'Employer BCP understood: know your reporting chain and remote work arrangements if you leave'},
+];
+
+function renderChecklist(){
+  const container=document.getElementById('checklistContainer');
+  container.innerHTML='';
+  let done=0;
+  checklistItems.forEach(item=>{
+    const checked=localStorage.getItem('chk_'+item.id)==='true';
+    if(checked) done++;
+    const div=document.createElement('div');
+    div.className='checklist-item'+(checked?' done':'');
+    div.innerHTML=`<input type="checkbox" id="${item.id}" ${checked?'checked':''} onchange="toggleCheck('${item.id}')"><label for="${item.id}">${item.text}</label>`;
+    container.appendChild(div);
+  });
+  document.getElementById('checkCount').textContent=done;
+  document.getElementById('checkTotal').textContent=checklistItems.length;
+  document.getElementById('checkBar').style.width=Math.round(done/checklistItems.length*100)+'%';
+}
+window.toggleCheck=function(id){
+  const cb=document.getElementById(id);
+  localStorage.setItem('chk_'+id,cb.checked);
+  renderChecklist();
+};
+renderChecklist();
+
+// ===== LIVE BREAKING NEWS TICKER =====
+const fallbackHeadlines = [
+  "US-Iran talks collapse 12 Apr — Trump orders US Navy blockade of Strait of Hormuz",
+  "Ship traffic halted at Hormuz — 400+ loaded tankers trapped in Gulf, 100+ outside",
+  "Oil spikes: Brent up 6.5% to $101, WTI up 7% to $103 after blockade announcement",
+  "EASA extends Gulf conflict zone advisory CZIB 2026-03-R6 — next review 24 April",
+  "Emirates at 70% capacity: 150 daily flights to 125 destinations. A380 back on 8 routes",
+  "Dubai caps foreign airlines to 1 flight/day at DXB from 20 April through 31 May",
+  "20,000 Indian crew stranded on tankers near Hormuz — food and water shortages reported",
+  "BA targets 1 July Dubai restart. Air France earliest return: 3 May. KLM: 17 May",
+  "Iran says US Hormuz blockade amounts to piracy — threatens decisive retaliation",
+  "Analysts: even if Hormuz reopens today, normal oil flows won't resume until July",
+];
+
+const rssFeeds = [
+  // Google News: last 12 hours only, focused on Iran/UAE conflict
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+Iran+US+Israel+war+UAE+OR+Hormuz+OR+ceasefire&hl=en-US&gl=US&ceid=US:en'),
+  // Google News: last 12h, flights/airspace focus
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+UAE+flights+OR+Dubai+airport+OR+EASA+airspace+OR+Emirates+airline&hl=en-US&gl=US&ceid=US:en'),
+  // Google News: last 12h, oil/Hormuz/shipping
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+oil+price+OR+Hormuz+blockade+OR+strait+shipping&hl=en-US&gl=US&ceid=US:en'),
+  // Al Jazeera (general — filtered by keywords in JS)
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml'),
+];
+// Max age for headlines: 24 hours (discard anything older)
+const MAX_HEADLINE_AGE_MS = 24 * 60 * 60 * 1000;
+
+const conflictKeywords = /iran|israel|us |usa|united states|gulf|uae|emirates|hormuz|ceasefire|missile|drone|strike|nuclear|sanctions|tehran|islamabad|houthi|hezbollah|idf|irgc|pentagon|airspace|conflict|war |escalat|negotiat|talks|enrichment|patriot|thaad|military|oil.*price|brent|shipping.*strait/i;
+
+function renderTicker(headlines) {
+  const el = document.getElementById('tickerContent');
+  const dot = '<span class="dot">\u25CF</span>';
+  const html = headlines.map(h => '<span class="hl">' + h + '</span>').join(dot);
+  el.innerHTML = html + dot + html;
+  // Adjust speed based on content: more headlines = slower scroll for readability
+  const duration = Math.max(50, headlines.length * 6);
+  el.style.animationDuration = duration + 's';
+}
+
+async function fetchLiveNews() {
+  const liveHeadlines = [];
+  const seen = new Set();
+  const label = document.getElementById('tickerLabel');
+  const status = document.getElementById('liveStatus');
+  const nowMs = Date.now();
+  let staleCount = 0;
+
+  for (const url of rssFeeds) {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === 'ok' && data.items) {
+        data.items.forEach(item => {
+          const title = item.title.replace(/ - [^-]+$/, '').trim();
+          const titleLower = title.toLowerCase();
+          // Skip duplicates and non-conflict items
+          if (seen.has(titleLower) || !conflictKeywords.test(title)) return;
+          // Filter out old articles (older than 24h)
+          if (item.pubDate) {
+            const pubMs = new Date(item.pubDate).getTime();
+            if (nowMs - pubMs > MAX_HEADLINE_AGE_MS) { staleCount++; return; }
+          }
+          seen.add(titleLower);
+          liveHeadlines.push(title);
+        });
+      }
+    } catch (e) {
+      console.warn('Feed fetch failed:', e);
+    }
+  }
+
+  const now = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
+
+  if (liveHeadlines.length >= 3) {
+    renderTicker(liveHeadlines);
+    if (label) label.innerHTML = '\u26A1 LIVE';
+    if (status) status.textContent = liveHeadlines.length + ' live headlines (last 24h) | ' + staleCount + ' older filtered out | Updated ' + now;
+    console.log('Ticker: ' + liveHeadlines.length + ' fresh headlines, ' + staleCount + ' stale removed at ' + now);
+  } else {
+    renderTicker(fallbackHeadlines);
+    if (label) label.innerHTML = '\u26A1 BREAKING';
+    if (status) status.textContent = 'Using cached headlines (' + staleCount + ' stale filtered) | Feed check at ' + now;
+    console.log('Ticker: fallback (' + liveHeadlines.length + ' fresh, ' + staleCount + ' stale) at ' + now);
+  }
+}
+
+// Initial render with fallback, then fetch live
+renderTicker(fallbackHeadlines);
+fetchLiveNews();
+
+// ===== LIVE DATA UPDATE ENGINE =====
+// Multiple feed sources, filtered to last 12 hours
+const dataFeeds = [
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+Iran+UAE+ceasefire+OR+Hormuz+blockade+OR+airspace+flights+Dubai&hl=en-US&gl=US&ceid=US:en'),
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+oil+price+brent+crude+OR+strait+hormuz+shipping&hl=en-US&gl=US&ceid=US:en'),
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=when:12h+Iran+war+OR+Israel+Lebanon+OR+EASA+gulf+airline&hl=en-US&gl=US&ceid=US:en'),
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.aljazeera.com/xml/rss/all.xml'),
+];
+
+async function fetchLiveUpdates() {
+  const updates = [];
+  const seen = new Set();
+  const nowMs = Date.now();
+
+  for (const url of dataFeeds) {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === 'ok' && data.items) {
+        data.items.forEach(item => {
+          const title = item.title.replace(/ - [^-]+$/, '').trim();
+          const key = title.toLowerCase().substring(0, 60);
+          if (seen.has(key)) return;
+          // Filter by age: max 24 hours
+          if (item.pubDate) {
+            const pubMs = new Date(item.pubDate).getTime();
+            if (nowMs - pubMs > MAX_HEADLINE_AGE_MS) return;
+          }
+          // Must match conflict keywords
+          if (!conflictKeywords.test(title)) return;
+          seen.add(key);
+          updates.push({
+            title: title,
+            date: item.pubDate,
+            source: (item.title.match(/ - ([^-]+)$/) || ['','News'])[1].trim(),
+            snippet: (item.description || '').replace(/<[^>]*>/g, '').substring(0, 200),
+            link: item.link
+          });
+        });
+      }
+    } catch(e) { console.warn('Data feed error:', e); }
+  }
+
+  // Sort newest first
+  updates.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  const panel = document.getElementById('liveUpdatesPanel');
+  const now = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
+
+  if (panel && updates.length > 0) {
+    const html = updates.slice(0, 12).map(u => {
+      const ago = u.date ? timeAgo(new Date(u.date)) : '';
+      const isNew = u.date && (nowMs - new Date(u.date).getTime() < 3600000); // < 1hr
+      const newBadge = isNew ? '<span style="background:rgba(192,57,43,0.2);color:#e74c3c;font-size:0.65em;padding:1px 5px;border-radius:3px;margin-left:6px;font-weight:700;">NEW</span>' : '';
+      return '<div style="padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.85em;">' +
+        '<a href="' + u.link + '" target="_blank" style="color:#fff;font-weight:500;">' + u.title + '</a>' + newBadge +
+        '<div style="font-size:0.78em;color:var(--muted);margin-top:2px;">' + u.source + (ago ? ' \u2022 ' + ago : '') + '</div>' +
+      '</div>';
+    }).join('');
+    panel.innerHTML = '<div style="font-size:0.7em;color:var(--safe);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;font-weight:600;">\u26A1 Live Feed \u2014 ' + updates.length + ' stories (last 24h) \u2014 Updated ' + now + '</div>' + html;
+  } else if (panel) {
+    panel.innerHTML = '<div style="color:var(--muted);font-size:0.85em;">No fresh updates in the last 24 hours. Next check in 5 minutes.</div>';
+  }
+
+  const statusEl = document.getElementById('liveStatus');
+  if (statusEl) {
+    const marketCount = updates.filter(u => /oil|brent|crude|shipping|tanker|hormuz/i.test(u.title)).length;
+    statusEl.textContent = updates.length + ' fresh stories (24h) | ' + marketCount + ' oil/shipping | Refreshed ' + now;
+  }
+
+  window._lastFetchTime = Date.now();
+}
+
+function timeAgo(date) {
+  const mins = Math.floor((Date.now() - date.getTime()) / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs / 24) + 'd ago';
+}
+
+// Update the "next update" countdown
+function updateNextRefresh() {
+  const el = document.getElementById('nextUpdate');
+  if (!el || !window._lastFetchTime) return;
+  const elapsed = Math.floor((Date.now() - window._lastFetchTime) / 1000);
+  const remaining = 300 - elapsed; // 5 min cycle
+  if (remaining > 0) {
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+  } else {
+    el.textContent = 'Refreshing...';
+  }
+}
+setInterval(updateNextRefresh, 1000);
+
+// Run all live updates every 5 minutes
+async function runAllUpdates() {
+  await Promise.all([fetchLiveNews(), fetchLiveUpdates(), fetchBondData()]);
+}
+runAllUpdates();
+setInterval(runAllUpdates, 5 * 60 * 1000);
+
+// ===== BOND TRACKER =====
+// Bahrain Gov USD Bond purchased ~Apr 2025 at 8% yield
+const BOND_PURCHASE_YIELD = 8.00;    // % — your purchase yield
+const BOND_COUPON = 8.00;            // % annual coupon
+const BOND_DURATION = 5.5;           // modified duration (years) — typical for ~7-10yr bond with 5yr remaining
+let bondCurrentYield = 8.45;         // % — estimated current market yield (updated from news)
+
+const bondFeeds = [
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=Bahrain+government+bond+OR+Bahrain+sovereign+bond+OR+Bahrain+yield&hl=en-US&gl=US&ceid=US:en'),
+  'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://news.google.com/rss/search?q=GCC+bond+yield+OR+Gulf+sovereign+bond+OR+Bahrain+credit+rating+Fitch+Moody&hl=en-US&gl=US&ceid=US:en'),
+];
+
+function calcBond(yld) {
+  const deltaY = yld - BOND_PURCHASE_YIELD;
+  // Price change ≈ -Duration × ΔYield (in %)
+  const priceChange = -BOND_DURATION * (deltaY / 100) * 100; // in $ per $100 face
+  const price = 100 + priceChange;
+  const coupon = BOND_COUPON;
+  const totalReturn = (price - 100) + coupon; // capital P&L + coupon
+  return { price, coupon, totalReturn, deltaY };
+}
+
+function renderBond(yld, news) {
+  const m = calcBond(yld);
+
+  // Recommendation thresholds:
+  // GREEN = sell: price above par AND total return > 9% (meaningful profit)
+  // RED = sell alert: total return < 0 (capital loss > coupon earned)
+  // AMBER = hold: in between
+  let rec = 'amber';
+  if (m.totalReturn < 0) rec = 'red';
+  else if (m.price > 100.5 && m.totalReturn > 9.0) rec = 'green';
+
+  // KPI cards
+  const yieldEl = document.getElementById('bondCurrentYield');
+  if (yieldEl) {
+    yieldEl.textContent = yld.toFixed(2) + '%';
+    yieldEl.className = 'kv ' + (m.deltaY > 0.25 ? 'bad' : m.deltaY < -0.25 ? 'good' : 'warn');
+  }
+  const priceEl = document.getElementById('bondPrice');
+  if (priceEl) {
+    priceEl.textContent = '$' + m.price.toFixed(1);
+    priceEl.className = 'kv ' + (m.price >= 100.5 ? 'good' : m.price >= 96 ? 'warn' : 'bad');
+  }
+  const retEl = document.getElementById('bondTotalReturn');
+  if (retEl) {
+    retEl.textContent = (m.totalReturn >= 0 ? '+' : '') + '$' + m.totalReturn.toFixed(1);
+    retEl.className = 'kv ' + (m.totalReturn >= 0 ? 'good' : 'bad');
+  }
+  const retPctEl = document.getElementById('bondTotalReturnPct');
+  if (retPctEl) {
+    retPctEl.textContent = 'Total: ' + (m.totalReturn >= 0 ? '+' : '') + m.totalReturn.toFixed(1) + '% on face value';
+  }
+  const yieldChangeEl = document.getElementById('bondYieldChange');
+  if (yieldChangeEl) {
+    yieldChangeEl.textContent = (m.deltaY >= 0 ? '+' : '') + m.deltaY.toFixed(2) + '% vs purchase yield';
+  }
+
+  // Traffic light
+  document.querySelectorAll('.bond-rec-seg').forEach(s => s.classList.remove('active'));
+  const segMap = { green: '.bond-rec-green', amber: '.bond-rec-amber', red: '.bond-rec-red' };
+  const active = document.querySelector(segMap[rec]);
+  if (active) active.classList.add('active');
+
+  // Recommendation text
+  const recMessages = {
+    green: '\u2705 SELL \u2014 Bond market price has risen above par. Including your 8% coupon, total return exceeds 9%. Good time to sell and lock in profit.',
+    amber: '\u26A0 HOLD \u2014 Bond is slightly below par due to elevated Gulf risk premium from the conflict. Your 8% coupon keeps total return positive. Hold until yields fall or situation stabilises.',
+    red: '\ud83d\udd34 SELL ALERT \u2014 Capital loss is now exceeding coupon earned. Total return turning negative. Consider selling to cut losses before further deterioration.'
+  };
+  const recColors = { green: 'var(--safe)', amber: 'var(--warning)', red: 'var(--accent)' };
+  const recEl = document.getElementById('bondRecText');
+  if (recEl) { recEl.textContent = recMessages[rec]; recEl.style.color = recColors[rec]; }
+
+  // Bond news
+  const newsEl = document.getElementById('bondNewsPanel');
+  if (newsEl) {
+    if (news.length > 0) {
+      const items = news.slice(0, 5).map(item => {
+        const ago = item.pubDate ? timeAgo(new Date(item.pubDate)) : '';
+        return '<div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:0.82em;">'
+          + '<a href="' + (item.link||'#') + '" target="_blank" style="color:#ecf0f1;">' + (item.title||'') + '</a>'
+          + '<div style="font-size:0.75em;color:var(--muted);margin-top:2px;">' + ago + '</div></div>';
+      }).join('');
+      newsEl.innerHTML = '<div style="font-size:0.7em;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Latest Bahrain Bond &amp; Gulf Credit News</div>' + items;
+    } else {
+      newsEl.innerHTML = '<div style="font-size:0.72em;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;">Latest Bahrain Bond &amp; Gulf Credit News</div>'
+        + '<div style="font-size:0.82em;color:var(--muted);">No fresh Bahrain bond news found. Estimated data based on Gulf market conditions (conflict risk premium ~+45bps).</div>';
+    }
+  }
+
+  const lastEl = document.getElementById('bondLastUpdate');
+  if (lastEl) {
+    const now = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
+    lastEl.textContent = 'Updated ' + now + (news.length > 0 ? '' : ' (estimated)');
+  }
+}
+
+async function fetchBondData() {
+  const items = [];
+  const seen = new Set();
+  let extractedYield = null;
+
+  for (const url of bondFeeds) {
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === 'ok' && data.items) {
+        data.items.forEach(item => {
+          const key = (item.title||'').toLowerCase().substring(0, 60);
+          if (seen.has(key)) return;
+          seen.add(key);
+          items.push(item);
+          // Try to extract yield figure from text
+          const text = ((item.title||'') + ' ' + (item.description||'')).replace(/<[^>]*>/g, '');
+          const m = text.match(/\b([6-9](?:\.\d{1,2})?)\s*%\s*(?:yield|coupon|return)/i);
+          if (m && !extractedYield) {
+            const y = parseFloat(m[1]);
+            if (y >= 6 && y <= 12) extractedYield = y;
+          }
+        });
+      }
+    } catch(e) { console.warn('Bond feed error:', e); }
+  }
+
+  if (extractedYield) bondCurrentYield = extractedYield;
+  renderBond(bondCurrentYield, items);
+}
+
+window.manualBondUpdate = function() {
+  const input = document.getElementById('bondYieldManual');
+  const val = parseFloat(input.value);
+  if (!isNaN(val) && val >= 4 && val <= 15) {
+    bondCurrentYield = val;
+    renderBond(bondCurrentYield, []);
+    const lastEl = document.getElementById('bondLastUpdate');
+    if (lastEl) lastEl.textContent = 'Manually updated — ' + new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
+  }
+};
+
+// Initial render, then fetch
+renderBond(bondCurrentYield, []);
+fetchBondData();
+
+// ===== SMOOTH NAV =====
+document.querySelectorAll('.nav-link[href^="#"]').forEach(link=>{
+  link.addEventListener('click',e=>{
+    e.preventDefault();
+    const target=document.querySelector(link.getAttribute('href'));
+    if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+    document.querySelectorAll('.nav-link').forEach(l=>l.classList.remove('active'));
+    link.classList.add('active');
+  });
+});
+
+// ===== SCROLL SPY =====
+const sections=document.querySelectorAll('.section-anchor');
+const navLinks=document.querySelectorAll('.nav-link[href^="#"]');
+const mainPanel=document.querySelector('.main');
+if(mainPanel){
+  mainPanel.addEventListener('scroll',()=>{
+    let current='';
+    sections.forEach(s=>{
+      const rect=s.getBoundingClientRect();
+      if(rect.top<200) current=s.id;
+    });
+    navLinks.forEach(l=>{
+      l.classList.remove('active');
+      if(l.getAttribute('href')==='#'+current) l.classList.add('active');
+    });
+  });
+}
+</script>
+</body>
+</html>
