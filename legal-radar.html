@@ -267,6 +267,8 @@ const SOURCES = [
   { id:"difc",            name:"DIFC / DFSA",                 authority:"DIFC Authority",       tier:4, scope:"Free Zone — DIFC",     url:"https://www.difc.ae/business/laws-regulations/",                sectors:["DIFC","Data Protection"],          count:5,  lastFetch:"—" },
   { id:"adgm",            name:"ADGM / FSRA",                 authority:"ADGM",                 tier:4, scope:"Free Zone — ADGM",     url:"https://www.adgm.com/legal-en/legislation",                     sectors:["ADGM","Financial Services"],       count:4,  lastFetch:"—" },
   { id:"vara",            name:"VARA — Virtual Assets",       authority:"VARA Dubai",           tier:4, scope:"Free Zone — VA",       url:"https://www.vara.ae/",                                          sectors:["Virtual Assets","Crypto"],         count:7,  lastFetch:"—" },
+  { id:"esma",            name:"ESMA — Standards & Metrology",authority:"ESMA",                 tier:2, scope:"Federal — Standards",     url:"https://www.esma.gov.ae/en-us/Pages/Home.aspx",                 sectors:["Food Safety","FMCG","Halal"],      count:5,  lastFetch:"—" },
+  { id:"mof-tax",         name:"Federal Tax Authority",       authority:"FTA",                  tier:2, scope:"Federal — Tax",           url:"https://tax.gov.ae/en",                                         sectors:["Excise Tax","VAT","FMCG"],         count:4,  lastFetch:"—" },
 ];
 
 const UPDATES = [
@@ -361,6 +363,46 @@ const UPDATES = [
     searchUrl:"https://www.google.com/search?q=DIFC+Data+Protection+Law+Amendment+2025+AI+automated+decision",
   },
   {
+    id:11, ref:"Cabinet Decision No. 91 of 2025",
+    title:"Excise Tax — Expanded Scope for Sweetened Beverages",
+    type:"Cabinet Decision", sector:"FMCG & Beverages", authority:"Cabinet / FTA", impact:"High", isAmend:false,
+    source_id:"mof-tax", date:"2025-07-01",
+    summary:"Expands excise tax scope to include all sugar-sweetened beverages (SSBs) with added sugar above 5g/100ml at a rate of 50%. Energy drinks remain at 100%. Carbonated water with added sugar now explicitly included. Producers and importers must update digital tax stamps and retail point-of-sale systems. Applies at the point of import or local manufacture.",
+    deadline:"All excise-liable beverage products must carry updated digital tax stamps by 1 January 2026. Non-compliant stock cannot be placed on shelves after that date.",
+    portalUrl:"https://tax.gov.ae/en",
+    searchUrl:"https://www.google.com/search?q=UAE+excise+tax+sweetened+beverages+2025+Cabinet+Decision",
+  },
+  {
+    id:12, ref:"ESMA Technical Regulation TR-FDS 457:2025",
+    title:"Mandatory Front-of-Pack Nutrition Labelling — Food & Beverages",
+    type:"Resolution", sector:"FMCG & Beverages", authority:"ESMA", impact:"High", isAmend:false,
+    source_id:"esma", date:"2025-10-15",
+    summary:"Mandates front-of-pack (FOP) traffic-light nutrition labelling on all pre-packaged food and beverage products sold in the UAE. Covers energy, total sugar, fat, saturated fat and sodium. Applies to all manufacturers, importers and distributors. Products with high sugar content must display a red indicator. Replaces voluntary FOP labelling guidelines.",
+    deadline:"All new product launches must comply from 15 October 2025. Existing stock already in distribution channels has an 18-month grace period — full compliance required by 15 April 2027.",
+    portalUrl:"https://www.esma.gov.ae/en-us/Pages/Home.aspx",
+    searchUrl:"https://www.google.com/search?q=UAE+ESMA+front+of+pack+nutrition+labelling+food+beverages+2025",
+  },
+  {
+    id:13, ref:"Cabinet Decision No. 46 of 2025",
+    title:"Unified UAE Halal Certification Framework — Food & Beverages",
+    type:"Cabinet Decision", sector:"FMCG & Beverages", authority:"ESMA / Cabinet", impact:"Medium", isAmend:false,
+    source_id:"esma", date:"2025-06-01",
+    summary:"Establishes a unified national halal certification scheme administered by ESMA, replacing fragmented emirate-level schemes. All food and beverage products sold in the UAE must carry the new UAE Halal Mark. Imported products from non-OIC countries require ESMA-accredited third-party certification. Existing certificates honoured until their expiry date.",
+    deadline:"All food and beverage manufacturers and importers must apply for the UAE Halal Mark by 1 June 2026. Products without valid certification cannot be imported or sold after that date.",
+    portalUrl:"https://www.esma.gov.ae/en-us/Pages/Home.aspx",
+    searchUrl:"https://www.google.com/search?q=UAE+halal+certification+unified+ESMA+2025",
+  },
+  {
+    id:14, ref:"Federal Decree-Law No. 5 of 2023 — Amendment 2025",
+    title:"Consumer Protection — Price Display & FMCG Transparency Obligations",
+    type:"Amendment", sector:"FMCG & Beverages", authority:"MoE", impact:"Medium", isAmend:true,
+    source_id:"moec", date:"2025-08-20",
+    summary:"Amendment to the Consumer Protection Law. Introduces mandatory unit pricing for all FMCG products in retail outlets above 500sqm. Requires clear disclosure of country of origin on all food and beverage primary packaging. Strengthens MoE enforcement authority with administrative penalties up to AED 5 million for non-compliance. E-commerce platforms selling FMCG must display unit prices online.",
+    deadline:"Retail outlets and e-commerce platforms must implement unit pricing within 6 months (by 20 February 2026). Origin labelling on all new packaging from date of enactment.",
+    portalUrl:"https://www.moet.gov.ae/en/laws",
+    searchUrl:"https://www.google.com/search?q=UAE+Consumer+Protection+amendment+2025+FMCG+price+unit+pricing",
+  },
+  {
     id:10, ref:"VARA Rulebook 2.0 (August 2025)",
     title:"VARA Virtual Assets Rulebook — Updated Edition",
     type:"Resolution", sector:"Virtual Assets", authority:"VARA", impact:"High", isAmend:true,
@@ -392,6 +434,7 @@ const LIVE_FEEDS = [
   { label:"Virtual Assets",  q:"VARA+UAE+virtual+assets+crypto+regulation+rulebook+2026" },
   { label:"Dubai",           q:"Dubai+legislation+law+decree+government+2026" },
   { label:"Abu Dhabi",       q:"Abu+Dhabi+law+decree+regulation+ADGM+2026" },
+  { label:"FMCG & Beverages",q:"UAE+FMCG+food+beverage+excise+tax+labelling+halal+regulation+2026" },
 ];
 
 // ===== STATE =====
