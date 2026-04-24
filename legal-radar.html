@@ -523,7 +523,7 @@ function cardHtml(u,compact){
   const impCls=IMPACT_CLS[u.impact]||'tag-med';
   const typeColor=TYPE_COLORS[u.type]||'#9FB3C8';
   const isNew=!u.isRead;
-  return `<div class="update-card${isNew?' unread':''}${compact?' compact':''}" onclick="openPanel(${u.id})" title="Click to view details">
+  return `<div class="update-card${isNew?' unread':''}${compact?' compact':''}">
     <div class="card-header">
       <div class="card-body">
         <div class="card-tags">
@@ -542,7 +542,11 @@ function cardHtml(u,compact){
         </div>
       </div>
     </div>
-    <div class="click-hint">Click to view full details →</div>
+    <div style="display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.05);">
+      <button onclick="openPanel(${u.id})" class="btn btn-gold btn-sm">📋 More Details</button>
+      <a href="${esc(u.portalUrl)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()" class="btn btn-outline btn-sm">Open Source →</a>
+      <a href="${esc(u.searchUrl)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation()" class="btn btn-ghost btn-sm">🔍 Search</a>
+    </div>
   </div>`;
 }
 
@@ -556,14 +560,14 @@ function renderFeed(){
         <div class="page-sub">${filtered.length} updates · ${SOURCES.length} sources monitored · ${S.liveItems.length} live stories · <em style="color:#C9A84C">Click any card to view details, links & related news</em></div>
       </div>
     </div>
+    <div class="section-sub-label">Key Updates — Curated</div>
+    <div class="card-list" style="margin-bottom:28px;">
+      ${filtered.map(u=>cardHtml(u,false)).join('')}
+      ${filtered.length===0?'<div class="empty-state">No updates match the current filters.</div>':''}
+    </div>
     <div class="live-section">
       <div class="live-section-hdr"><span class="live-dot-sm"></span>Live Legislative News — Last 3 Days (${LIVE_FEEDS.length} sources)</div>
       <div id="liveFeedInner"><div class="live-placeholder">Loading…</div></div>
-    </div>
-    <div class="section-sub-label">Key Updates — Curated (click to expand)</div>
-    <div class="card-list">
-      ${filtered.map(u=>cardHtml(u,false)).join('')}
-      ${filtered.length===0?'<div class="empty-state">No updates match the current filters.</div>':''}
     </div>`;
   patchLiveSection();
 }
