@@ -33,6 +33,14 @@ a{color:#C9A84C;text-decoration:none;}a:hover{color:#e0b84a;text-decoration:unde
 .nav-btn{background:transparent;color:#9FB3C8;border:none;cursor:pointer;padding:7px 14px;border-radius:6px;font-size:13px;font-weight:600;letter-spacing:.02em;transition:all .2s;white-space:nowrap;}
 .nav-btn.active{background:#C9A84C;color:#0D1B2A;}
 .nav-btn:hover:not(.active){background:#1E3A5F;color:#E8EDF2;}
+/* Sector dropdown */
+.nav-dropdown-wrap{position:relative;display:inline-block;}
+.nav-dropdown{position:absolute;top:calc(100% + 6px);left:0;background:#0D1B2A;border:1px solid #1E3A5F;border-radius:8px;min-width:200px;z-index:300;box-shadow:0 8px 32px rgba(0,0,0,.5);overflow:hidden;animation:slideIn .15s ease;}
+.nav-dropdown-item{display:block;width:100%;text-align:left;padding:9px 16px;border:none;background:transparent;color:#9FB3C8;cursor:pointer;font-size:12px;font-family:'Source Sans 3',sans-serif;font-weight:500;border-bottom:1px solid rgba(255,255,255,.04);transition:all .15s;}
+.nav-dropdown-item:last-child{border-bottom:none;}
+.nav-dropdown-item:hover{background:#1E3A5F;color:#C9A84C;}
+.nav-dropdown-item.all{color:#E8EDF2;font-weight:700;}
+.nav-dropdown-item .sector-dot{width:7px;height:7px;border-radius:50%;background:#C9A84C;display:inline-block;margin-right:8px;}
 .header-right{display:flex;align-items:center;gap:12px;flex-shrink:0;}
 .unread-badge{background:#E63946;color:#fff;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;border:none;}
 .unread-badge:hover{background:#c0392b;}
@@ -177,7 +185,10 @@ a{color:#C9A84C;text-decoration:none;}a:hover{color:#e0b84a;text-decoration:unde
     <div class="nav-tabs">
       <button class="nav-btn active" id="btnFeed"    onclick="setView('feed')">📋 Feed</button>
       <button class="nav-btn"        id="btnSources" onclick="setView('sources')">🔗 Source Directory</button>
-      <button class="nav-btn"        id="btnSectors" onclick="setView('sectors')">📂 By Sector</button>
+      <div class="nav-dropdown-wrap" id="sectorDropdownWrap">
+        <button class="nav-btn" id="btnSectors" onclick="toggleSectorDropdown(event)">📂 By Sector ▾</button>
+        <div class="nav-dropdown" id="sectorDropdown" style="display:none" id="sectorDropdown"></div>
+      </div>
     </div>
     <div class="header-right">
       <button class="unread-badge" id="unreadBadge" onclick="markAllRead()" style="display:none"></button>
@@ -386,8 +397,11 @@ const LIVE_FEEDS = [
 // ===== STATE =====
 const S = {
   view:'feed', filterSrc:'all', filterImp:'all', filterAmend:false,
-  search:'', liveItems:[], liveLoading:false, countdown:1800,
+  search:'', filterSector:'all', liveItems:[], liveLoading:false, countdown:1800,
 };
+
+// All unique sectors derived from data
+const ALL_SECTORS = [...new Set(UPDATES.map(u=>u.sector))].sort();
 
 // Restore read state
 UPDATES.forEach(u => {
@@ -604,13 +618,17 @@ function renderSources(){
 
 function renderSectors(){
   const filtered=getFiltered();
-  const sectors=[...new Set(filtered.map(u=>u.sector))];
+  let sectors=[...new Set(filtered.map(u=>u.sector))];
+  if(S.filterSector!=='all') sectors=sectors.filter(s=>s===S.filterSector);
   document.getElementById('mainContent').innerHTML=`
-    <div class="page-title" style="margin-bottom:4px;">Updates by Sector</div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:4px;">
+      <div class="page-title">Updates by Sector</div>
+      ${S.filterSector!=='all'?`<button onclick="selectSector('all')" style="background:#1E3A5F;border:none;color:#C9A84C;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700;cursor:pointer;">✕ ${esc(S.filterSector)}</button>`:''}
+    </div>
     <p style="font-size:12px;color:#4A6FA5;margin-bottom:20px;">Click any card to view full details, deadlines and source links.</p>
     ${sectors.map(sector=>{
       const items=filtered.filter(u=>u.sector===sector);
-      return `<div class="sector-group">
+      return `<div class="sector-group" id="sector-${esc(sector.replace(/\W+/g,'-'))}">
         <div class="sector-group-hdr">
           <span class="sector-group-title">${esc(sector)}</span>
           <span class="sector-count-badge">${items.length}</span>
@@ -620,6 +638,46 @@ function renderSectors(){
     }).join('')}
     ${sectors.length===0?'<div class="empty-state">No updates match the current filters.</div>':''}`;
 }
+
+// ===== SECTOR DROPDOWN =====
+function buildSectorDropdown(){
+  const dd=document.getElementById('sectorDropdown');
+  if(!dd)return;
+  dd.innerHTML='<button class="nav-dropdown-item all" onclick="selectSector(\'all\')">📂 All Sectors</button>'
+    +ALL_SECTORS.map(s=>`<button class="nav-dropdown-item" onclick="selectSector('${s.replace(/'/g,"\\'")}')"><span class="sector-dot"></span>${esc(s)}</button>`).join('');
+}
+
+window.toggleSectorDropdown=function(e){
+  e.stopPropagation();
+  const dd=document.getElementById('sectorDropdown');
+  if(!dd)return;
+  const open=dd.style.display==='block';
+  dd.style.display=open?'none':'block';
+  if(!open) buildSectorDropdown();
+};
+
+window.selectSector=function(sector){
+  S.filterSector=sector;
+  S.view='sectors';
+  // Update nav button states
+  ['Feed','Sources','Sectors'].forEach(id=>{
+    const btn=document.getElementById('btn'+id);
+    if(btn)btn.className='nav-btn'+(id==='Sectors'?' active':'');
+  });
+  // Close dropdown
+  const dd=document.getElementById('sectorDropdown');
+  if(dd)dd.style.display='none';
+  renderContent();
+  // Scroll to top of content
+  const c=document.getElementById('mainContent');
+  if(c)c.scrollTop=0;
+};
+
+// Close dropdown when clicking outside
+document.addEventListener('click',()=>{
+  const dd=document.getElementById('sectorDropdown');
+  if(dd)dd.style.display='none';
+});
 
 function renderContent(){
   if(S.view==='feed')renderFeed();
@@ -666,6 +724,7 @@ function renderHeaderBadge(){
 // ===== CONTROLS =====
 window.setView=function(v){
   S.view=v;
+  if(v==='sectors') S.filterSector='all'; // reset sector filter on direct nav click
   ['feed','sources','sectors'].forEach(id=>{
     const btn=document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
     if(btn)btn.className='nav-btn'+(id===v?' active':'');
