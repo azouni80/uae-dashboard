@@ -8,12 +8,14 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{background:#0D1B2A;color:#E8EDF2;font-family:'Source Sans 3',sans-serif;overflow-x:hidden;}
-a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
+a{color:#C9A84C;text-decoration:none;}a:hover{color:#e0b84a;text-decoration:underline;}
 ::-webkit-scrollbar{width:6px;background:#0D1B2A;}::-webkit-scrollbar-thumb{background:#1E3A5F;border-radius:3px;}
 
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
 @keyframes slideIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
 @keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+@keyframes panelSlide{from{transform:translateX(100%);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
 
 /* Layout */
 .dashboard{display:flex;flex-direction:column;min-height:100vh;}
@@ -36,7 +38,7 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
 .unread-badge:hover{background:#c0392b;}
 .live-indicator{display:flex;align-items:center;gap:7px;}
 .live-dot{width:8px;height:8px;border-radius:50%;animation:pulse 2s infinite;display:inline-block;}
-.live-dot.fresh{background:#2EC4B6;} .live-dot.stale{background:#C9A84C;}
+.live-dot.fresh{background:#2EC4B6;}.live-dot.stale{background:#C9A84C;}
 .countdown-txt{font-size:11px;color:#9FB3C8;font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
 .refresh-btn{background:#1E3A5F;color:#C9A84C;border:1px solid #C9A84C44;border-radius:6px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:.04em;transition:all .2s;white-space:nowrap;}
 .refresh-btn:hover{background:#C9A84C22;border-color:#C9A84C88;}
@@ -57,17 +59,18 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
 .stat-value{font-size:12px;font-weight:700;color:#C9A84C;font-family:'IBM Plex Mono',monospace;}
 .sidebar-divider{border-top:1px solid #1E3A5F;margin:16px 0;}
 
-/* Update cards */
-.update-card{background:#112030;border:1px solid #1E3A5F;border-left:3px solid #1E3A5F44;border-radius:8px;padding:16px 20px;transition:border .2s;}
+/* Update cards — fully clickable */
+.update-card{background:#112030;border:1px solid #1E3A5F;border-left:3px solid #1E3A5F44;border-radius:8px;padding:16px 20px;transition:all .2s;cursor:pointer;position:relative;}
+.update-card:hover{border-color:#C9A84C66;box-shadow:0 4px 20px rgba(201,168,76,.12);transform:translateY(-1px);}
 .update-card.unread{border-color:#C9A84C44;border-left-color:#C9A84C;box-shadow:0 0 12px #C9A84C22;animation:slideIn .3s ease;}
 .update-card.compact{padding:12px 16px;}
+.update-card .click-hint{position:absolute;bottom:12px;right:16px;font-size:10px;color:#2E4A6A;font-weight:500;transition:color .2s;}
+.update-card:hover .click-hint{color:#C9A84C;}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;}
 .card-body{flex:1;min-width:0;}
 .card-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
 .tag{padding:1px 9px;border-radius:3px;font-size:10px;font-weight:700;letter-spacing:.05em;display:inline-block;}
-.tag-hi{background:#E63946;color:#fff;}
-.tag-med{background:#C9A84C;color:#0D1B2A;}
-.tag-lo{background:#3A4A5A;color:#9FB3C8;}
+.tag-hi{background:#E63946;color:#fff;}.tag-med{background:#C9A84C;color:#0D1B2A;}.tag-lo{background:#3A4A5A;color:#9FB3C8;}
 .tag-amend{background:#2A1A3A;color:#A78BFA;}
 .tag-new{background:#0D2A1A;color:#2EC4B6;animation:pulse 2s infinite;}
 .tag-type{background:#1E3A5F;}
@@ -77,15 +80,11 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
 .card-summary{font-size:12px;color:#9FB3C8;line-height:1.6;margin-bottom:10px;}
 .card-meta{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
 .card-meta span{font-size:11px;color:#4A6FA5;}
-.card-actions{display:flex;flex-direction:column;gap:6px;flex-shrink:0;align-items:flex-end;}
-.src-btn{background:#1E3A5F;color:#C9A84C;padding:5px 12px;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;border:1px solid #C9A84C33;display:inline-block;}
-.src-btn:hover{background:#C9A84C22;text-decoration:none;color:#C9A84C;}
-.mark-read-btn{background:transparent;color:#4A6FA5;border:none;font-size:11px;cursor:pointer;padding:4px 8px;}
-.mark-read-btn:hover{color:#9FB3C8;}
 .card-list{display:flex;flex-direction:column;gap:12px;}
 
 /* Source cards */
-.source-card{background:#112030;border:1px solid #1E3A5F;border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;}
+.source-card{background:#112030;border:1px solid #1E3A5F;border-radius:8px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;transition:all .2s;}
+.source-card:hover{border-color:#3498db55;box-shadow:0 4px 16px rgba(52,152,219,.1);}
 .source-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
 .source-card-top{display:flex;justify-content:space-between;align-items:flex-start;}
 .tier-badge{padding:2px 8px;border-radius:3px;font-size:9px;font-weight:700;letter-spacing:.1em;}
@@ -101,32 +100,66 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
 .tier-stripe{width:3px;height:20px;border-radius:2px;display:inline-block;flex-shrink:0;}
 .tier-label-txt{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;}
 
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;text-decoration:none;border:none;transition:all .2s;white-space:nowrap;}
+.btn-gold{background:#C9A84C;color:#0D1B2A;}.btn-gold:hover{background:#e0b84a;color:#0D1B2A;text-decoration:none;}
+.btn-outline{background:#1E3A5F;color:#C9A84C;border:1px solid #C9A84C44;}.btn-outline:hover{background:#C9A84C22;color:#e0b84a;text-decoration:none;}
+.btn-ghost{background:transparent;color:#9FB3C8;border:1px solid #1E3A5F;}.btn-ghost:hover{border-color:#9FB3C8;color:#E8EDF2;text-decoration:none;}
+.btn-sm{padding:5px 12px;font-size:11px;}
+
 /* Live feed */
 .live-section{background:#0A1929;border:1px solid #1E3A5F;border-left:3px solid #2EC4B6;border-radius:8px;padding:16px 20px;margin-bottom:20px;}
 .live-section-hdr{display:flex;align-items:center;gap:8px;font-size:10px;color:#2EC4B6;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:12px;}
 .live-dot-sm{width:7px;height:7px;border-radius:50%;background:#2EC4B6;display:inline-block;animation:pulse 2s infinite;}
-.live-item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;}
+.live-item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);}
 .live-item:last-child{border-bottom:none;padding-bottom:0;}
-.live-item a{color:#E8EDF2;font-weight:500;}
+.live-item a{color:#E8EDF2;font-weight:500;font-size:12px;display:block;line-height:1.4;}
 .live-item a:hover{color:#C9A84C;text-decoration:none;}
-.live-item-meta{font-size:10px;color:#4A6FA5;margin-top:2px;}
+.live-item-meta{font-size:10px;color:#4A6FA5;margin-top:3px;}
 .live-item-src{color:#2EC4B6;}
 .live-placeholder{color:#4A6FA5;font-size:12px;text-align:center;padding:12px 0;}
 
-/* Page headers */
+/* Page titles */
 .page-title{font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:#E8EDF2;}
 .page-sub{font-size:12px;color:#4A6FA5;margin-top:2px;}
 .page-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;}
-
-/* Sector view */
+.section-sub-label{font-size:10px;color:#4A6FA5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
 .sector-group{margin-bottom:28px;}
 .sector-group-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
 .sector-group-title{font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;color:#E8EDF2;}
 .sector-count-badge{background:#1E3A5F;color:#C9A84C;border-radius:20px;padding:1px 10px;font-size:11px;font-weight:700;}
-.section-sub-label{font-size:10px;color:#4A6FA5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px;}
 .empty-state{color:#4A6FA5;font-size:13px;text-align:center;padding:40px;}
 
-@media(max-width:900px){.sidebar{display:none;}.content{padding:16px;}.nav-btn{padding:6px 10px;font-size:12px;}}
+/* ===== DETAIL PANEL ===== */
+.panel-overlay{position:fixed;inset:0;background:rgba(6,14,23,.7);z-index:200;animation:fadeIn .2s ease;backdrop-filter:blur(2px);}
+.detail-panel{position:fixed;top:0;right:0;width:520px;max-width:95vw;height:100vh;background:#0D1B2A;border-left:1px solid #1E3A5F;z-index:201;overflow-y:auto;animation:panelSlide .25s ease;display:flex;flex-direction:column;}
+.panel-topbar{background:#060E17;border-bottom:1px solid #1E3A5F;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:sticky;top:0;z-index:1;}
+.panel-topbar-left{font-size:10px;color:#4A6FA5;letter-spacing:.1em;text-transform:uppercase;}
+.panel-close{background:transparent;border:1px solid #1E3A5F;color:#9FB3C8;border-radius:6px;padding:5px 12px;cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;}
+.panel-close:hover{border-color:#E63946;color:#E63946;}
+.panel-body{padding:24px 24px 40px;flex:1;}
+.panel-tags{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+.panel-ref{font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4A6FA5;margin-bottom:8px;}
+.panel-title{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:#E8EDF2;line-height:1.3;margin-bottom:14px;}
+.panel-meta-row{display:flex;gap:20px;flex-wrap:wrap;padding:12px 0;border-top:1px solid #1E3A5F;border-bottom:1px solid #1E3A5F;margin-bottom:16px;}
+.panel-meta-item{display:flex;flex-direction:column;gap:3px;}
+.panel-meta-label{font-size:9px;color:#4A6FA5;text-transform:uppercase;letter-spacing:.1em;}
+.panel-meta-value{font-size:13px;color:#E8EDF2;font-weight:600;}
+.panel-section-title{font-size:10px;color:#4A6FA5;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;margin-top:20px;}
+.panel-summary{font-size:13px;color:#9FB3C8;line-height:1.7;}
+.panel-deadline{background:rgba(230,126,34,.08);border:1px solid rgba(230,126,34,.25);border-radius:6px;padding:12px 14px;margin-top:16px;}
+.panel-deadline-label{font-size:9px;color:#e67e22;text-transform:uppercase;letter-spacing:.1em;font-weight:700;margin-bottom:4px;}
+.panel-deadline-txt{font-size:13px;color:#E8EDF2;line-height:1.5;}
+.panel-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;}
+.panel-news-item{padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);}
+.panel-news-item:last-child{border-bottom:none;}
+.panel-news-item a{color:#E8EDF2;font-size:12px;font-weight:500;display:block;line-height:1.4;}
+.panel-news-item a:hover{color:#C9A84C;text-decoration:none;}
+.panel-news-meta{font-size:10px;color:#4A6FA5;margin-top:2px;}
+.panel-no-news{font-size:12px;color:#4A6FA5;font-style:italic;padding:8px 0;}
+.panel-divider{border-top:1px solid #1E3A5F;margin:20px 0;}
+
+@media(max-width:900px){.sidebar{display:none;}.content{padding:16px;}.detail-panel{width:100vw;}}
 </style>
 </head>
 <body>
@@ -171,9 +204,9 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
       <div class="filter-section">
         <span class="filter-label">Impact</span>
         <button class="filter-btn active" id="impAll"    onclick="setFilter('imp','all')">All Impact</button>
-        <button class="filter-btn"        id="impHigh"   onclick="setFilter('imp','High')">High</button>
-        <button class="filter-btn"        id="impMedium" onclick="setFilter('imp','Medium')">Medium</button>
-        <button class="filter-btn"        id="impLow"    onclick="setFilter('imp','Low')">Low</button>
+        <button class="filter-btn"        id="impHigh"   onclick="setFilter('imp','High')">🔴 High</button>
+        <button class="filter-btn"        id="impMedium" onclick="setFilter('imp','Medium')">🟡 Medium</button>
+        <button class="filter-btn"        id="impLow"    onclick="setFilter('imp','Low')">⚪ Low</button>
       </div>
 
       <div class="filter-section">
@@ -185,7 +218,6 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
       </div>
 
       <div class="sidebar-divider"></div>
-
       <div class="filter-section">
         <span class="filter-label">Quick Stats</span>
         <div id="quickStats"></div>
@@ -198,8 +230,18 @@ a{color:#C9A84C;text-decoration:none;}a:hover{text-decoration:underline;}
   </div>
 </div>
 
+<!-- ===== DETAIL PANEL ===== -->
+<div class="panel-overlay" id="panelOverlay" style="display:none" onclick="closePanel()"></div>
+<div class="detail-panel" id="detailPanel" style="display:none">
+  <div class="panel-topbar">
+    <span class="panel-topbar-left" id="panelBreadcrumb">Update Detail</span>
+    <button class="panel-close" onclick="closePanel()">✕ Close</button>
+  </div>
+  <div class="panel-body" id="panelBody"></div>
+</div>
+
 <script>
-// ===== STATIC DATA =====
+// ===== DATA =====
 const SOURCES = [
   { id:"uae-legislation", name:"UAE Legislation Platform",    authority:"Cabinet Secretariat", tier:1, scope:"Federal",             url:"https://uaelegislation.gov.ae/en",                              sectors:["All Federal Law"],                count:14, lastFetch:"—" },
   { id:"moj",             name:"Ministry of Justice",         authority:"MOJ",                 tier:1, scope:"Federal",             url:"https://www.moj.gov.ae/en/laws-and-legislation.aspx",           sectors:["Civil","Criminal","Judicial"],     count:7,  lastFetch:"—" },
@@ -217,16 +259,106 @@ const SOURCES = [
 ];
 
 const UPDATES = [
-  { id:1,  ref:"Federal Decree-Law No. 32 of 2025", title:"Capital Markets Authority & Regulation of Capital Markets",      type:"New Law",             sector:"Capital Markets",  authority:"CMA",       impact:"High",   isAmend:false, source_id:"cma",           date:"2025-12-15", summary:"Reconstitutes the SCA as Capital Market Authority with expanded mandate. Brings virtual assets within federal capital markets perimeter. All regulated entities must regularise status by 1 Jan 2027.",                          url:"https://uaelegislation.gov.ae/en" },
-  { id:2,  ref:"Federal Decree-Law No. 10 of 2025", title:"Anti-Money Laundering, Combating Financing of Terrorism",       type:"Amendment",           sector:"AML/CFT",          authority:"UAEFIU",    impact:"High",   isAmend:true,  source_id:"uaefiu",        date:"2025-11-20", summary:"Consolidates AML/CFT framework. Cabinet Resolution No. 134 of 2025 issued as Executive Regulations. Replaces prior Cabinet Decision No. 74/2020.",                                                                            url:"https://www.uaefiu.gov.ae/" },
-  { id:3,  ref:"Federal Decree-Law No. 6 of 2025",  title:"Central Bank of the UAE — Expanded Mandate",                    type:"New Law",             sector:"Banking/Finance",  authority:"CBUAE",     impact:"High",   isAmend:false, source_id:"cbuae",         date:"2025-09-16", summary:"Broadens CBUAE licensing to include fintech and payment service providers using virtual assets. Embeds cybersecurity obligations into primary legislation. Effective 16 September 2025.",                                         url:"https://www.centralbank.ae/en/" },
-  { id:4,  ref:"Federal Decree-Law No. 26 of 2025", title:"Child Digital Safety Law",                                       type:"New Law",             sector:"Digital/Tech",     authority:"Cabinet",   impact:"Medium", isAmend:false, source_id:"uae-legislation",date:"2025-10-01", summary:"Strict obligations on digital platforms serving users under 18. Covers data restrictions, age controls, and advertising rules for e-commerce platforms.",                                                                          url:"https://uaelegislation.gov.ae/en" },
-  { id:5,  ref:"Cabinet Resolution No. 134 of 2025",title:"Executive Regulations — AML Decree Law No. 10 of 2025",         type:"Executive Regulation",sector:"AML/CFT",          authority:"Cabinet",   impact:"High",   isAmend:false, source_id:"uaefiu",        date:"2025-12-01", summary:"Detailed executive regulations for the new AML/CFT law. Covers suspicious transaction reporting, beneficial ownership, and enhanced due diligence thresholds.",                                                                   url:"https://www.uaefiu.gov.ae/" },
-  { id:6,  ref:"Ministerial Decision No. 96 of 2026",title:"Temporary Exemption — Continuity of Essential Goods Supply",   type:"Ministerial Decision",sector:"Commercial",       authority:"MoE",       impact:"Medium", isAmend:false, source_id:"moec",          date:"2026-03-15", summary:"Grants temporary exemption to certain agreements ensuring continuity of essential goods and services supply in exceptional circumstances. Related to competition regulation.",                                                        url:"https://www.moet.gov.ae/en/laws" },
-  { id:7,  ref:"Federal Decree-Law No. 33 of 2025", title:"Regulation of the Capital Market — Secondary Legislation",      type:"Decree",              sector:"Capital Markets",  authority:"CMA",       impact:"High",   isAmend:false, source_id:"cma",           date:"2025-12-15", summary:"Companion decree to the CMA Law. Introduces recovery and resolution regime for systemically important CMA-regulated entities. Expands criminal and administrative enforcement powers.",                                          url:"https://www.sca.gov.ae/en/" },
-  { id:8,  ref:"Dubai Law No. 4 of 2025",           title:"Amendment to Dubai Real Estate Regulatory Authority Framework", type:"Amendment",           sector:"Real Estate",      authority:"Dubai Gov", impact:"Medium", isAmend:true,  source_id:"dubai-leg",     date:"2025-11-05", summary:"Amends RERA's supervisory powers over jointly owned property and strata title. Updates service charge dispute mechanisms and expands landlord-tenant mediation.",                                                                  url:"https://dlp.dubai.gov.ae/" },
-  { id:9,  ref:"DIFC Data Protection Law Amendment", title:"DIFC DP Law Amendment — AI & Automated Decision-Making",       type:"Amendment",           sector:"Data Protection",  authority:"DIFC",      impact:"High",   isAmend:true,  source_id:"difc",          date:"2026-01-10", summary:"Addresses joint controllers, records of processing, AI bias risk assessments, and intra-group transfer mechanics. Aligned with updated international standards. Consolidated text published.",                                    url:"https://www.difc.ae/business/laws-regulations/" },
-  { id:10, ref:"VARA Rulebook 2.0",                 title:"VARA Virtual Assets Rulebook — Updated Edition",                 type:"Resolution",          sector:"Virtual Assets",   authority:"VARA",      impact:"High",   isAmend:true,  source_id:"vara",          date:"2025-08-20", summary:"Full update to the VARA Rulebook covering stablecoin issuance (FRVA/ARVA), custody standards, and marketing regulations applicable to ADGM/DIFC firms targeting Dubai residents.",                                             url:"https://www.vara.ae/" },
+  {
+    id:1, ref:"Federal Decree-Law No. 32 of 2025",
+    title:"Capital Markets Authority & Regulation of Capital Markets",
+    type:"New Law", sector:"Capital Markets", authority:"CMA", impact:"High", isAmend:false,
+    source_id:"cma", date:"2025-12-15",
+    summary:"Reconstitutes the SCA as Capital Market Authority with expanded mandate. Brings virtual assets within federal capital markets perimeter. All regulated entities must regularise status by 1 Jan 2027. Introduces new categories of market intermediaries and a revised licensing framework.",
+    deadline:"All CMA-regulated entities must regularise their licensed status by 1 January 2027.",
+    portalUrl:"https://www.sca.gov.ae/en/",
+    searchUrl:"https://www.google.com/search?q=%22Federal+Decree-Law+No.+32+of+2025%22+UAE+Capital+Market+Authority",
+  },
+  {
+    id:2, ref:"Federal Decree-Law No. 10 of 2025",
+    title:"Anti-Money Laundering, Combating Financing of Terrorism",
+    type:"Amendment", sector:"AML/CFT", authority:"UAEFIU", impact:"High", isAmend:true,
+    source_id:"uaefiu", date:"2025-11-20",
+    summary:"Consolidates AML/CFT framework. Cabinet Resolution No. 134 of 2025 issued as Executive Regulations. Replaces prior Cabinet Decision No. 74/2020. Introduces tightened beneficial ownership thresholds, enhanced due diligence requirements and updated suspicious transaction reporting timelines.",
+    deadline:"Executive Regulations (Cabinet Resolution 134/2025) effective immediately. Review internal compliance frameworks within 90 days of publication.",
+    portalUrl:"https://www.uaefiu.gov.ae/",
+    searchUrl:"https://www.google.com/search?q=%22Federal+Decree-Law+No.+10+of+2025%22+UAE+AML+CFT",
+  },
+  {
+    id:3, ref:"Federal Decree-Law No. 6 of 2025",
+    title:"Central Bank of the UAE — Expanded Mandate",
+    type:"New Law", sector:"Banking/Finance", authority:"CBUAE", impact:"High", isAmend:false,
+    source_id:"cbuae", date:"2025-09-16",
+    summary:"Broadens CBUAE licensing to include fintech and payment service providers using virtual assets. Embeds cybersecurity obligations into primary legislation. Effective 16 September 2025. All virtual-asset payment service providers must apply for CBUAE licensing within 12 months.",
+    deadline:"Virtual-asset payment service providers must apply for CBUAE licensing by 16 September 2026.",
+    portalUrl:"https://www.centralbank.ae/en/",
+    searchUrl:"https://www.google.com/search?q=%22Federal+Decree-Law+No.+6+of+2025%22+UAE+Central+Bank",
+  },
+  {
+    id:4, ref:"Federal Decree-Law No. 26 of 2025",
+    title:"Child Digital Safety Law",
+    type:"New Law", sector:"Digital/Tech", authority:"Cabinet", impact:"Medium", isAmend:false,
+    source_id:"uae-legislation", date:"2025-10-01",
+    summary:"Strict obligations on digital platforms serving users under 18. Covers data restrictions, age controls, and advertising rules for e-commerce platforms. Platforms must implement age verification systems and restrict data collection from minors.",
+    deadline:"Digital platforms serving minors must implement compliant age-verification and data controls within 6 months of enactment.",
+    portalUrl:"https://uaelegislation.gov.ae/en",
+    searchUrl:"https://www.google.com/search?q=%22Federal+Decree-Law+No.+26+of+2025%22+UAE+Child+Digital+Safety",
+  },
+  {
+    id:5, ref:"Cabinet Resolution No. 134 of 2025",
+    title:"Executive Regulations — AML Decree Law No. 10 of 2025",
+    type:"Executive Regulation", sector:"AML/CFT", authority:"Cabinet", impact:"High", isAmend:false,
+    source_id:"uaefiu", date:"2025-12-01",
+    summary:"Detailed executive regulations for the new AML/CFT law. Covers suspicious transaction reporting timelines, beneficial ownership thresholds (reduced to 10%), and enhanced due diligence requirements for high-risk customers and jurisdictions.",
+    deadline:"Immediate effect. Institutions must update their AML policies and retrain compliance staff within 60 days.",
+    portalUrl:"https://www.uaefiu.gov.ae/",
+    searchUrl:"https://www.google.com/search?q=%22Cabinet+Resolution+No.+134+of+2025%22+UAE+AML",
+  },
+  {
+    id:6, ref:"Ministerial Decision No. 96 of 2026",
+    title:"Temporary Exemption — Continuity of Essential Goods Supply",
+    type:"Ministerial Decision", sector:"Commercial", authority:"MoE", impact:"Medium", isAmend:false,
+    source_id:"moec", date:"2026-03-15",
+    summary:"Grants temporary exemption to certain agreements ensuring continuity of essential goods and services supply in exceptional circumstances. Related to competition law provisions under Federal Law No. 36 of 2023. Applies to food, medicine and critical supply chain agreements.",
+    deadline:"Exemption is temporary — review your supply agreements for ongoing compliance once exceptional circumstances end.",
+    portalUrl:"https://www.moet.gov.ae/en/laws",
+    searchUrl:"https://www.google.com/search?q=%22Ministerial+Decision+No.+96+of+2026%22+UAE+Ministry+Economy",
+  },
+  {
+    id:7, ref:"Federal Decree-Law No. 33 of 2025",
+    title:"Regulation of the Capital Market — Secondary Legislation",
+    type:"Decree", sector:"Capital Markets", authority:"CMA", impact:"High", isAmend:false,
+    source_id:"cma", date:"2025-12-15",
+    summary:"Companion decree to the CMA Law (Federal Decree-Law No. 32/2025). Introduces recovery and resolution regime for systemically important CMA-regulated entities. Expands criminal and administrative enforcement powers including disgorgement of profits and market manipulation penalties.",
+    deadline:"Systemically important firms must submit recovery plans to CMA within 6 months of designation.",
+    portalUrl:"https://www.sca.gov.ae/en/",
+    searchUrl:"https://www.google.com/search?q=%22Federal+Decree-Law+No.+33+of+2025%22+UAE+capital+market",
+  },
+  {
+    id:8, ref:"Dubai Law No. 4 of 2025",
+    title:"Amendment to Dubai Real Estate Regulatory Authority Framework",
+    type:"Amendment", sector:"Real Estate", authority:"Dubai Gov", impact:"Medium", isAmend:true,
+    source_id:"dubai-leg", date:"2025-11-05",
+    summary:"Amends RERA's supervisory powers over jointly owned property and strata title. Updates service charge dispute mechanisms and expands landlord-tenant mediation. Introduces mandatory registration of jointly owned property management companies with RERA.",
+    deadline:"Jointly owned property management companies must register with RERA within 90 days of enactment.",
+    portalUrl:"https://dlp.dubai.gov.ae/",
+    searchUrl:"https://www.google.com/search?q=%22Dubai+Law+No.+4+of+2025%22+RERA+real+estate",
+  },
+  {
+    id:9, ref:"DIFC Data Protection Law Amendment 2025",
+    title:"DIFC DP Law Amendment — AI & Automated Decision-Making",
+    type:"Amendment", sector:"Data Protection", authority:"DIFC", impact:"High", isAmend:true,
+    source_id:"difc", date:"2026-01-10",
+    summary:"Addresses joint controllers, records of processing, AI bias risk assessments, and intra-group transfer mechanics. Aligned with updated international standards. Consolidated text published. Controllers using AI for automated decisions affecting individuals must conduct and document bias risk assessments.",
+    deadline:"DIFC-registered entities using AI for automated decision-making must complete bias risk assessments and update their ROPA by 10 July 2026.",
+    portalUrl:"https://www.difc.ae/business/laws-regulations/",
+    searchUrl:"https://www.google.com/search?q=DIFC+Data+Protection+Law+Amendment+2025+AI+automated+decision",
+  },
+  {
+    id:10, ref:"VARA Rulebook 2.0 (August 2025)",
+    title:"VARA Virtual Assets Rulebook — Updated Edition",
+    type:"Resolution", sector:"Virtual Assets", authority:"VARA", impact:"High", isAmend:true,
+    source_id:"vara", date:"2025-08-20",
+    summary:"Full update to the VARA Rulebook covering stablecoin issuance (FRVA/ARVA), custody standards, and marketing regulations applicable to ADGM/DIFC firms targeting Dubai residents. Introduces new capital adequacy requirements for VA custodians and enhanced consumer protection rules.",
+    deadline:"All VARA-licensed entities must comply with Rulebook 2.0 standards. VA custodians must meet new capital requirements by 1 March 2026.",
+    portalUrl:"https://www.vara.ae/",
+    searchUrl:"https://www.google.com/search?q=VARA+Rulebook+2.0+2025+UAE+virtual+assets",
+  },
 ];
 
 // Configs
@@ -236,10 +368,9 @@ const TYPE_COLORS = {
   "Executive Regulation":"#60A5FA","Cabinet Decision":"#F472B6",
   "Ministerial Decision":"#FB923C","Resolution":"#34D399"
 };
-const TIER_LABELS = { 1:"Federal — Primary", 2:"Federal — Sectoral", 3:"Emirate", 4:"Free Zone" };
-const TIER_COLORS_MAP = { 1:"#C9A84C", 2:"#60A5FA", 3:"#34D399", 4:"#A78BFA" };
+const TIER_LABELS    = { 1:"Federal — Primary", 2:"Federal — Sectoral", 3:"Emirate", 4:"Free Zone" };
+const TIER_COLORS_MAP= { 1:"#C9A84C", 2:"#60A5FA", 3:"#34D399", 4:"#A78BFA" };
 
-// Live feed queries — Google News RSS, targeted per authority/sector
 const LIVE_FEEDS = [
   { label:"Federal",         q:"UAE+federal+decree-law+legislation+cabinet+resolution+2026" },
   { label:"Capital Markets", q:"UAE+Capital+Market+Authority+CMA+securities+regulation+2026" },
@@ -249,122 +380,150 @@ const LIVE_FEEDS = [
   { label:"DIFC / ADGM",     q:"DIFC+ADGM+law+regulation+data+protection+financial+2026" },
   { label:"Virtual Assets",  q:"VARA+UAE+virtual+assets+crypto+regulation+rulebook+2026" },
   { label:"Dubai",           q:"Dubai+legislation+law+decree+government+2026" },
-  { label:"Abu Dhabi",       q:"Abu+Dhabi+law+decree+regulation+2026" },
+  { label:"Abu Dhabi",       q:"Abu+Dhabi+law+decree+regulation+ADGM+2026" },
 ];
 
 // ===== STATE =====
 const S = {
-  view: 'feed',
-  filterSrc: 'all',
-  filterImp: 'all',
-  filterAmend: false,
-  search: '',
-  liveItems: [],
-  liveLoading: false,
-  countdown: 1800,
+  view:'feed', filterSrc:'all', filterImp:'all', filterAmend:false,
+  search:'', liveItems:[], liveLoading:false, countdown:1800,
 };
 
-// Restore read state from localStorage
+// Restore read state
 UPDATES.forEach(u => {
-  if (localStorage.getItem('lr2_' + u.id) === '1') u.isRead = true;
-  else u.isRead = u.isRead || false;
+  u.isRead = localStorage.getItem('lr3_'+u.id) === '1' ? true : (u.isRead||false);
 });
 
 // ===== HELPERS =====
-function esc(s) {
-  return String(s||'')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function timeAgo(d){
+  const m=Math.floor((Date.now()-new Date(d).getTime())/60000);
+  if(m<1)return'just now';if(m<60)return m+'m ago';
+  const h=Math.floor(m/60);if(h<24)return h+'h ago';
+  return Math.floor(h/24)+'d ago';
 }
-function timeAgo(d) {
-  const m = Math.floor((Date.now() - new Date(d).getTime()) / 60000);
-  if (m < 1) return 'just now';
-  if (m < 60) return m + 'm ago';
-  const h = Math.floor(m/60);
-  if (h < 24) return h + 'h ago';
-  return Math.floor(h/24) + 'd ago';
-}
-function getFiltered() {
-  return UPDATES.filter(u => {
-    if (S.filterSrc !== 'all' && u.source_id !== S.filterSrc) return false;
-    if (S.filterImp !== 'all' && u.impact !== S.filterImp) return false;
-    if (S.filterAmend && !u.isAmend) return false;
-    if (S.search) {
-      const q = S.search.toLowerCase();
-      if (!u.title.toLowerCase().includes(q) &&
-          !u.ref.toLowerCase().includes(q) &&
-          !(u.summary||'').toLowerCase().includes(q)) return false;
-    }
+function getFiltered(){
+  return UPDATES.filter(u=>{
+    if(S.filterSrc!=='all'&&u.source_id!==S.filterSrc)return false;
+    if(S.filterImp!=='all'&&u.impact!==S.filterImp)return false;
+    if(S.filterAmend&&!u.isAmend)return false;
+    if(S.search){const q=S.search.toLowerCase();if(!u.title.toLowerCase().includes(q)&&!u.ref.toLowerCase().includes(q)&&!(u.summary||'').toLowerCase().includes(q))return false;}
     return true;
   });
 }
 
-// ===== LIVE FEED FETCH =====
-async function fetchLiveNews() {
-  S.liveLoading = true;
-  patchLiveSection();
-
-  const items = [], seen = new Set();
-  const MAX_AGE = 3 * 24 * 60 * 60 * 1000; // 3 days
-
-  for (const feed of LIVE_FEEDS) {
-    try {
-      const rssUrl = 'https://news.google.com/rss/search?q=when:3d+' + feed.q + '&hl=en-US&gl=US&ceid=US:en';
-      const apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(rssUrl);
-      const res = await fetch(apiUrl);
-      const data = await res.json();
-      if (data.status === 'ok' && Array.isArray(data.items)) {
-        data.items.slice(0, 4).forEach(item => {
-          const title = (item.title || '').replace(/ - [^-]+$/, '').trim();
-          const key = title.toLowerCase().substring(0, 55);
-          if (seen.has(key) || title.length < 20) return;
-          if (item.pubDate && (Date.now() - new Date(item.pubDate).getTime()) > MAX_AGE) return;
+// ===== LIVE FEED =====
+async function fetchLiveNews(){
+  S.liveLoading=true; patchLiveSection();
+  const items=[],seen=new Set(),MAX_AGE=3*24*60*60*1000;
+  for(const feed of LIVE_FEEDS){
+    try{
+      const rssUrl='https://news.google.com/rss/search?q=when:3d+'+feed.q+'&hl=en-US&gl=US&ceid=US:en';
+      const res=await fetch('https://api.rss2json.com/v1/api.json?rss_url='+encodeURIComponent(rssUrl));
+      const data=await res.json();
+      if(data.status==='ok'&&Array.isArray(data.items)){
+        data.items.slice(0,4).forEach(item=>{
+          const title=(item.title||'').replace(/ - [^-]+$/,'').trim();
+          const key=title.toLowerCase().substring(0,55);
+          if(seen.has(key)||title.length<20)return;
+          if(item.pubDate&&(Date.now()-new Date(item.pubDate).getTime())>MAX_AGE)return;
           seen.add(key);
-          items.push({ title, link: item.link || '#', pubDate: item.pubDate || null, sector: feed.label });
+          items.push({title,link:item.link||'#',pubDate:item.pubDate||null,sector:feed.label});
         });
       }
-    } catch(e) { /* non-fatal */ }
+    }catch(e){}
   }
-
-  items.sort((a,b) => new Date(b.pubDate||0) - new Date(a.pubDate||0));
-  S.liveItems = items;
-  S.liveLoading = false;
-
-  const now = new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
-  SOURCES.forEach(s => s.lastFetch = now);
-
-  patchLiveSection();
-  renderSidebar();
-  renderHeaderBadge();
+  items.sort((a,b)=>new Date(b.pubDate||0)-new Date(a.pubDate||0));
+  S.liveItems=items; S.liveLoading=false;
+  const now=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Dubai'});
+  SOURCES.forEach(s=>s.lastFetch=now);
+  patchLiveSection(); renderSidebar(); renderHeaderBadge();
 }
 
-// Patch only the live section (avoid full re-render)
-function patchLiveSection() {
-  const el = document.getElementById('liveFeedInner');
-  if (!el) return;
-  if (S.liveLoading) {
-    el.innerHTML = '<div class="live-placeholder"><span class="spin">↺</span> Fetching live legislative news from ' + LIVE_FEEDS.length + ' sources…</div>';
-    return;
-  }
-  if (S.liveItems.length === 0) {
-    el.innerHTML = '<div class="live-placeholder">No stories found in the last 3 days. Try refreshing.</div>';
-    return;
-  }
-  el.innerHTML = S.liveItems.slice(0, 15).map(item => {
-    const ago = item.pubDate ? timeAgo(item.pubDate) : '';
-    return '<div class="live-item">'
-      + '<a href="' + esc(item.link) + '" target="_blank" rel="noreferrer">' + esc(item.title) + '</a>'
-      + '<div class="live-item-meta"><span class="live-item-src">' + esc(item.sector) + '</span>'
-      + (ago ? ' &middot; ' + ago : '') + '</div>'
-      + '</div>';
+function patchLiveSection(){
+  const el=document.getElementById('liveFeedInner');if(!el)return;
+  if(S.liveLoading){el.innerHTML='<div class="live-placeholder"><span class="spin">↺</span> Fetching from '+LIVE_FEEDS.length+' sources…</div>';return;}
+  if(!S.liveItems.length){el.innerHTML='<div class="live-placeholder">No stories found in the last 3 days. Try refreshing.</div>';return;}
+  el.innerHTML=S.liveItems.slice(0,15).map(item=>{
+    const ago=item.pubDate?timeAgo(item.pubDate):'';
+    return '<div class="live-item"><a href="'+esc(item.link)+'" target="_blank" rel="noreferrer">'+esc(item.title)+'</a>'
+      +'<div class="live-item-meta"><span class="live-item-src">'+esc(item.sector)+'</span>'+(ago?' &middot; '+ago:'')+'</div></div>';
   }).join('');
 }
 
+// Related news for a specific sector
+function getRelatedNews(sector, limit){
+  const kw=sector.toLowerCase().replace(/[\/\s]+/g,'|');
+  return S.liveItems.filter(i=>new RegExp(kw,'i').test(i.sector)||new RegExp(kw,'i').test(i.title)).slice(0,limit||5);
+}
+
+// ===== DETAIL PANEL =====
+window.openPanel = function(id){
+  const u=UPDATES.find(x=>x.id===id);if(!u)return;
+  // Mark read
+  u.isRead=true; localStorage.setItem('lr3_'+id,'1');
+  renderHeaderBadge(); renderSidebar();
+
+  const impCls=IMPACT_CLS[u.impact]||'tag-med';
+  const typeColor=TYPE_COLORS[u.type]||'#9FB3C8';
+  const related=getRelatedNews(u.sector, 5);
+  const relatedHtml=related.length
+    ? related.map(n=>'<div class="panel-news-item"><a href="'+esc(n.link)+'" target="_blank" rel="noreferrer">'+esc(n.title)+'</a><div class="panel-news-meta">'+esc(n.sector)+(n.pubDate?' · '+timeAgo(n.pubDate):'')+'</div></div>').join('')
+    : '<div class="panel-no-news">No related live news found yet — refresh to check.</div>';
+
+  document.getElementById('panelBreadcrumb').textContent = u.sector + ' · ' + u.date;
+  document.getElementById('panelBody').innerHTML=`
+    <div class="panel-tags">
+      <span class="tag ${impCls}">${esc(u.impact.toUpperCase())}</span>
+      <span class="tag tag-type" style="color:${typeColor}">${esc(u.type)}</span>
+      ${u.isAmend?'<span class="tag tag-amend">AMENDMENT</span>':''}
+    </div>
+    <div class="panel-ref">${esc(u.ref)}</div>
+    <div class="panel-title">${esc(u.title)}</div>
+
+    <div class="panel-meta-row">
+      <div class="panel-meta-item"><div class="panel-meta-label">Authority</div><div class="panel-meta-value">📍 ${esc(u.authority)}</div></div>
+      <div class="panel-meta-item"><div class="panel-meta-label">Sector</div><div class="panel-meta-value">📂 ${esc(u.sector)}</div></div>
+      <div class="panel-meta-item"><div class="panel-meta-label">Published</div><div class="panel-meta-value">📅 ${esc(u.date)}</div></div>
+      <div class="panel-meta-item"><div class="panel-meta-label">Impact</div><div class="panel-meta-value">${esc(u.impact)}</div></div>
+    </div>
+
+    <div class="panel-section-title">Summary</div>
+    <div class="panel-summary">${esc(u.summary)}</div>
+
+    ${u.deadline?`<div class="panel-deadline"><div class="panel-deadline-label">⚠ Key Deadline / Action Required</div><div class="panel-deadline-txt">${esc(u.deadline)}</div></div>`:''}
+
+    <div class="panel-actions">
+      <a href="${esc(u.portalUrl)}" target="_blank" rel="noreferrer" class="btn btn-gold">Open Official Portal →</a>
+      <a href="${esc(u.searchUrl)}" target="_blank" rel="noreferrer" class="btn btn-outline">Search This Law 🔍</a>
+    </div>
+
+    <div class="panel-divider"></div>
+    <div class="panel-section-title">Related Live News — ${esc(u.sector)}</div>
+    ${relatedHtml}
+  `;
+
+  document.getElementById('panelOverlay').style.display='block';
+  document.getElementById('detailPanel').style.display='flex';
+  document.body.style.overflow='hidden';
+};
+
+window.closePanel = function(){
+  document.getElementById('panelOverlay').style.display='none';
+  document.getElementById('detailPanel').style.display='none';
+  document.body.style.overflow='';
+  renderContent(); // refresh card read states
+};
+
+// Close with Escape key
+document.addEventListener('keydown', e=>{ if(e.key==='Escape') closePanel(); });
+
 // ===== CARD HTML =====
-function cardHtml(u, compact) {
-  const impCls = IMPACT_CLS[u.impact] || 'tag-med';
-  const typeColor = TYPE_COLORS[u.type] || '#9FB3C8';
-  const isNew = !u.isRead;
-  return `<div class="update-card${isNew?' unread':''}${compact?' compact':''}">
+function cardHtml(u,compact){
+  const impCls=IMPACT_CLS[u.impact]||'tag-med';
+  const typeColor=TYPE_COLORS[u.type]||'#9FB3C8';
+  const isNew=!u.isRead;
+  return `<div class="update-card${isNew?' unread':''}${compact?' compact':''}" onclick="openPanel(${u.id})" title="Click to view details">
     <div class="card-header">
       <div class="card-body">
         <div class="card-tags">
@@ -375,90 +534,78 @@ function cardHtml(u, compact) {
         </div>
         <div class="card-ref">${esc(u.ref)}</div>
         <div class="card-title${compact?' sm':''}">${esc(u.title)}</div>
-        ${!compact?`<div class="card-summary">${esc(u.summary)}</div>`:''}
+        ${!compact?`<div class="card-summary">${esc(u.summary.substring(0,160))}${u.summary.length>160?'…':''}</div>`:''}
         <div class="card-meta">
           <span>📍 ${esc(u.authority)}</span>
           <span>📅 ${esc(u.date)}</span>
           <span>📂 ${esc(u.sector)}</span>
         </div>
       </div>
-      <div class="card-actions">
-        <a href="${esc(u.url)}" target="_blank" class="src-btn">View Source →</a>
-        ${isNew?`<button class="mark-read-btn" onclick="markRead(${u.id})">Mark Read</button>`:''}
-      </div>
     </div>
+    <div class="click-hint">Click to view full details →</div>
   </div>`;
 }
 
 // ===== RENDER VIEWS =====
-function renderFeed() {
-  const filtered = getFiltered();
-  const unread = UPDATES.filter(u=>!u.isRead).length;
-  document.getElementById('mainContent').innerHTML = `
+function renderFeed(){
+  const filtered=getFiltered();
+  document.getElementById('mainContent').innerHTML=`
     <div class="page-hdr">
       <div>
         <div class="page-title">Legislative Feed</div>
-        <div class="page-sub">${filtered.length} updates · ${SOURCES.length} sources · ${S.liveItems.length} live stories</div>
+        <div class="page-sub">${filtered.length} updates · ${SOURCES.length} sources monitored · ${S.liveItems.length} live stories · <em style="color:#C9A84C">Click any card to view details, links & related news</em></div>
       </div>
     </div>
-
     <div class="live-section">
-      <div class="live-section-hdr">
-        <span class="live-dot-sm"></span>
-        Live Legislative News — Last 3 Days (${LIVE_FEEDS.length} sources)
-      </div>
+      <div class="live-section-hdr"><span class="live-dot-sm"></span>Live Legislative News — Last 3 Days (${LIVE_FEEDS.length} sources)</div>
       <div id="liveFeedInner"><div class="live-placeholder">Loading…</div></div>
     </div>
-
-    <div class="section-sub-label">Key Updates — Curated</div>
+    <div class="section-sub-label">Key Updates — Curated (click to expand)</div>
     <div class="card-list">
-      ${filtered.map(u => cardHtml(u, false)).join('')}
-      ${filtered.length === 0 ? '<div class="empty-state">No updates match the current filters.</div>' : ''}
+      ${filtered.map(u=>cardHtml(u,false)).join('')}
+      ${filtered.length===0?'<div class="empty-state">No updates match the current filters.</div>':''}
     </div>`;
   patchLiveSection();
 }
 
-function renderSources() {
-  document.getElementById('mainContent').innerHTML = `
+function renderSources(){
+  document.getElementById('mainContent').innerHTML=`
     <div class="page-title" style="margin-bottom:6px;">Source Directory</div>
-    <p style="font-size:12px;color:#4A6FA5;margin-bottom:24px;">All ${SOURCES.length} monitored official UAE legislation portals — click to open directly.</p>
-    ${[1,2,3,4].map(tier => {
-      const srcs = SOURCES.filter(s=>s.tier===tier);
-      const tc = TIER_COLORS_MAP[tier];
+    <p style="font-size:12px;color:#4A6FA5;margin-bottom:24px;">All ${SOURCES.length} monitored official UAE legislation portals.</p>
+    ${[1,2,3,4].map(tier=>{
+      const srcs=SOURCES.filter(s=>s.tier===tier);
+      const tc=TIER_COLORS_MAP[tier];
       return `<div class="tier-section">
         <div class="tier-header">
           <span class="tier-stripe" style="background:${tc}"></span>
           <span class="tier-label-txt" style="color:${tc}">${TIER_LABELS[tier]}</span>
         </div>
-        <div class="source-grid">
-          ${srcs.map(s=>`
-            <div class="source-card">
-              <div class="source-card-top">
-                <span class="tier-badge" style="background:${tc}22;color:${tc}">${TIER_LABELS[tier]}</span>
-                <span class="update-count">${s.count} updates</span>
-              </div>
-              <div>
-                <div class="source-name">${esc(s.name)}</div>
-                <div class="source-scope">${esc(s.scope)}</div>
-              </div>
-              <div class="sector-tags">${s.sectors.map(sec=>`<span class="sector-tag">${esc(sec)}</span>`).join('')}</div>
-              <div class="source-footer">
-                <span class="last-fetched">Fetched: ${esc(s.lastFetch)}</span>
-                <a href="${esc(s.url)}" target="_blank" class="src-btn">Open Portal →</a>
-              </div>
-            </div>`).join('')}
+        <div class="source-grid">${srcs.map(s=>`
+          <div class="source-card">
+            <div class="source-card-top">
+              <span class="tier-badge" style="background:${tc}22;color:${tc}">${TIER_LABELS[tier]}</span>
+              <span class="update-count">${s.count} updates</span>
+            </div>
+            <div><div class="source-name">${esc(s.name)}</div><div class="source-scope">${esc(s.scope)}</div></div>
+            <div class="sector-tags">${s.sectors.map(sec=>`<span class="sector-tag">${esc(sec)}</span>`).join('')}</div>
+            <div class="source-footer">
+              <span class="last-fetched">Fetched: ${esc(s.lastFetch)}</span>
+              <a href="${esc(s.url)}" target="_blank" class="btn btn-outline btn-sm">Open Portal →</a>
+            </div>
+          </div>`).join('')}
         </div>
       </div>`;
     }).join('')}`;
 }
 
-function renderSectors() {
-  const filtered = getFiltered();
-  const sectors = [...new Set(filtered.map(u=>u.sector))];
-  document.getElementById('mainContent').innerHTML = `
-    <div class="page-title" style="margin-bottom:20px;">Updates by Sector</div>
-    ${sectors.map(sector => {
-      const items = filtered.filter(u=>u.sector===sector);
+function renderSectors(){
+  const filtered=getFiltered();
+  const sectors=[...new Set(filtered.map(u=>u.sector))];
+  document.getElementById('mainContent').innerHTML=`
+    <div class="page-title" style="margin-bottom:4px;">Updates by Sector</div>
+    <p style="font-size:12px;color:#4A6FA5;margin-bottom:20px;">Click any card to view full details, deadlines and source links.</p>
+    ${sectors.map(sector=>{
+      const items=filtered.filter(u=>u.sector===sector);
       return `<div class="sector-group">
         <div class="sector-group-hdr">
           <span class="sector-group-title">${esc(sector)}</span>
@@ -470,114 +617,85 @@ function renderSectors() {
     ${sectors.length===0?'<div class="empty-state">No updates match the current filters.</div>':''}`;
 }
 
-function renderContent() {
-  if (S.view==='feed') renderFeed();
-  else if (S.view==='sources') renderSources();
-  else if (S.view==='sectors') renderSectors();
+function renderContent(){
+  if(S.view==='feed')renderFeed();
+  else if(S.view==='sources')renderSources();
+  else if(S.view==='sectors')renderSectors();
   renderSidebar();
 }
 
 // ===== SIDEBAR =====
-function renderSidebar() {
-  // Toggle sidebar visibility (hidden on sources view)
-  const sb = document.getElementById('sidebar');
-  if (sb) sb.style.display = S.view==='sources' ? 'none' : '';
-
-  // Source filter buttons
-  const srcEl = document.getElementById('sourceFilters');
-  if (srcEl) srcEl.innerHTML = SOURCES.map(s =>
+function renderSidebar(){
+  const sb=document.getElementById('sidebar');
+  if(sb)sb.style.display=S.view==='sources'?'none':'';
+  const srcEl=document.getElementById('sourceFilters');
+  if(srcEl)srcEl.innerHTML=SOURCES.map(s=>
     `<button class="filter-btn${S.filterSrc===s.id?' active':''}" onclick="setFilter('src','${s.id}')" title="${esc(s.name)}">${esc(s.name)}</button>`
   ).join('');
-
-  // Impact buttons
-  const srcAll = document.getElementById('srcAll');
-  if (srcAll) srcAll.className = 'filter-btn' + (S.filterSrc==='all'?' active':'');
-  ['all','High','Medium','Low'].forEach(v => {
-    const el = document.getElementById('imp' + (v==='all'?'All':v));
-    if (el) el.className = 'filter-btn' + (S.filterImp===v?' active':'');
+  const srcAll=document.getElementById('srcAll');
+  if(srcAll)srcAll.className='filter-btn'+(S.filterSrc==='all'?' active':'');
+  ['all','High','Medium','Low'].forEach(v=>{
+    const el=document.getElementById('imp'+(v==='all'?'All':v));
+    if(el)el.className='filter-btn'+(S.filterImp===v?' active':'');
   });
-
-  // Amend checkbox
-  const amendEl = document.getElementById('amendFilter');
-  if (amendEl) amendEl.checked = S.filterAmend;
-
-  // Stats
-  const statsEl = document.getElementById('quickStats');
-  if (statsEl) {
-    const f = getFiltered();
-    const unread = UPDATES.filter(u=>!u.isRead).length;
-    statsEl.innerHTML = [
-      ['Total Updates', UPDATES.length],
-      ['Filtered', f.length],
-      ['Unread', unread],
-      ['High Impact', UPDATES.filter(u=>u.impact==='High').length],
-      ['Amendments', UPDATES.filter(u=>u.isAmend).length],
-      ['Live Stories', S.liveItems.length],
+  const amendEl=document.getElementById('amendFilter');
+  if(amendEl)amendEl.checked=S.filterAmend;
+  const statsEl=document.getElementById('quickStats');
+  if(statsEl){
+    const f=getFiltered();
+    const unread=UPDATES.filter(u=>!u.isRead).length;
+    statsEl.innerHTML=[
+      ['Total Updates',UPDATES.length],['Filtered',f.length],['Unread',unread],
+      ['High Impact',UPDATES.filter(u=>u.impact==='High').length],
+      ['Amendments',UPDATES.filter(u=>u.isAmend).length],
+      ['Live Stories',S.liveItems.length],
     ].map(([l,v])=>`<div class="stat-row"><span class="stat-label">${l}</span><span class="stat-value">${v}</span></div>`).join('');
   }
 }
 
-function renderHeaderBadge() {
-  const unread = UPDATES.filter(u=>!u.isRead).length;
-  const b = document.getElementById('unreadBadge');
-  if (b) { b.style.display = unread>0?'inline-block':'none'; b.textContent = unread+' unread · mark all read'; }
+function renderHeaderBadge(){
+  const unread=UPDATES.filter(u=>!u.isRead).length;
+  const b=document.getElementById('unreadBadge');
+  if(b){b.style.display=unread>0?'inline-block':'none';b.textContent=unread+' unread · mark all read';}
 }
 
 // ===== CONTROLS =====
-window.setView = function(v) {
-  S.view = v;
-  ['feed','sources','sectors'].forEach(id => {
-    const key = 'btn' + id.charAt(0).toUpperCase() + id.slice(1);
-    const btn = document.getElementById(key);
-    if (btn) btn.className = 'nav-btn' + (id===v?' active':'');
+window.setView=function(v){
+  S.view=v;
+  ['feed','sources','sectors'].forEach(id=>{
+    const btn=document.getElementById('btn'+id.charAt(0).toUpperCase()+id.slice(1));
+    if(btn)btn.className='nav-btn'+(id===v?' active':'');
   });
   renderContent();
 };
-
-window.setFilter = function(key, val) {
-  if (key==='src') S.filterSrc = val;
-  if (key==='imp') S.filterImp = val;
-  if (key==='amend') S.filterAmend = val;
+window.setFilter=function(key,val){
+  if(key==='src')S.filterSrc=val;
+  if(key==='imp')S.filterImp=val;
+  if(key==='amend')S.filterAmend=val;
   renderContent();
 };
-
-window.onSearch = function(val) {
-  S.search = val;
-  renderContent();
+window.onSearch=function(val){S.search=val;renderContent();};
+window.markAllRead=function(){
+  UPDATES.forEach(u=>{u.isRead=true;localStorage.setItem('lr3_'+u.id,'1');});
+  renderContent();renderHeaderBadge();
 };
-
-window.markRead = function(id) {
-  const u = UPDATES.find(x=>x.id===id);
-  if (u) { u.isRead = true; localStorage.setItem('lr2_'+id,'1'); }
-  renderContent();
-  renderHeaderBadge();
-};
-
-window.markAllRead = function() {
-  UPDATES.forEach(u => { u.isRead=true; localStorage.setItem('lr2_'+u.id,'1'); });
-  renderContent();
-  renderHeaderBadge();
-};
-
-window.triggerRefresh = async function() {
-  const btn = document.getElementById('refreshBtn');
-  if (btn) { btn.disabled=true; btn.innerHTML='<span class="spin">↺</span> Refreshing…'; }
-  S.countdown = 1800;
+window.triggerRefresh=async function(){
+  const btn=document.getElementById('refreshBtn');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spin">↺</span> Refreshing…';}
+  S.countdown=1800;
   await fetchLiveNews();
-  if (btn) { btn.disabled=false; btn.innerHTML='↺ Refresh Now'; }
+  if(btn){btn.disabled=false;btn.innerHTML='↺ Refresh Now';}
 };
 
 // ===== COUNTDOWN =====
-setInterval(() => {
-  S.countdown = S.countdown > 0 ? S.countdown - 1 : 0;
-  if (S.countdown === 0) { S.countdown = 1800; fetchLiveNews(); }
-  const mins = String(Math.floor(S.countdown/60)).padStart(2,'0');
-  const secs = String(S.countdown%60).padStart(2,'0');
-  const el = document.getElementById('countdownTxt');
-  if (el) el.textContent = 'Next: ' + mins + ':' + secs;
-  const dot = document.getElementById('liveDot');
-  if (dot) dot.className = 'live-dot ' + (S.countdown < 1500 ? 'stale' : 'fresh');
-}, 1000);
+setInterval(()=>{
+  S.countdown=S.countdown>0?S.countdown-1:0;
+  if(S.countdown===0){S.countdown=1800;fetchLiveNews();}
+  const mins=String(Math.floor(S.countdown/60)).padStart(2,'0');
+  const secs=String(S.countdown%60).padStart(2,'0');
+  const el=document.getElementById('countdownTxt');if(el)el.textContent='Next: '+mins+':'+secs;
+  const dot=document.getElementById('liveDot');if(dot)dot.className='live-dot '+(S.countdown<1500?'stale':'fresh');
+},1000);
 
 // ===== INIT =====
 renderContent();
